@@ -1,9 +1,9 @@
 ---
-name: code-principles
-description: Apply these surgical code principles whenever writing, modifying, or refactoring code. Preserve manual formatting, require docstrings, prefer reusable composition, limit inline comments, and communicate tersely.
+name: code-principle
+description: Apply these surgical code principle whenever writing, modifying, or refactoring code. Preserve manual formatting, require docstrings, prefer reusable composition, limit inline comments, and communicate tersely.
 ---
 
-# Code Principles
+# Code Principle
 
 Write the smallest coherent change. Apply every rule below to code you create or modify.
 
