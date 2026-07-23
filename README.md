@@ -11,6 +11,18 @@ These are the canonical package names for the coding-principle and test-principl
 
 ## Install
 
+### With `npx skills`
+
+Install both skills globally for Codex:
+
+```sh
+npx skills add what-in-the-nim/skillets -g --agent codex --skill code-principle --skill testing-principle --yes
+```
+
+Use `--list` to inspect the available skills before installing, or omit `-g` to install them only in the current project.
+
+### From a local clone
+
 Clone the repository, then symlink the skills into an agent's personal skill directory:
 
 ```sh
