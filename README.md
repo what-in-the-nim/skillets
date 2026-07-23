@@ -4,10 +4,10 @@ Personal, reusable skills for agentic coding.
 
 ## Skills
 
-- [`code-principles`](skills/code-principles/SKILL.md) — surgical coding defaults for formatting, documentation, composition, comments, and scope.
+- [`code-principle`](skills/code-principle/SKILL.md) — surgical coding defaults for formatting, documentation, composition, comments, and scope.
 - [`testing-principle`](skills/testing-principle/SKILL.md) — pytest guidance for realistic collaborators, test organization, fixtures, parametrization, and assertions.
 
-These are the canonical package names for the coding-principles and test-principles skills.
+These are the canonical package names for the coding-principle and test-principle skills.
 
 ## Install
 
@@ -15,7 +15,7 @@ Clone the repository, then symlink the skills into an agent's personal skill dir
 
 ```sh
 mkdir -p ~/.agents/skills
-ln -s "$PWD/skills/code-principles" ~/.agents/skills/code-principles
+ln -s "$PWD/skills/code-principle" ~/.agents/skills/code-principle
 ln -s "$PWD/skills/testing-principle" ~/.agents/skills/testing-principle
 ```
 

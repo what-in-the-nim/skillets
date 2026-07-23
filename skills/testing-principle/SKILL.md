@@ -1,6 +1,6 @@
 ---
 name: testing-principle
-description: Apply this repository's pytest testing principles whenever writing, revising, or reviewing Python tests. Prefer real collaborators, behavior-focused test classes, parametrized cases, reusable fixtures, mirrored unit-test paths, and public-interface assertions while directly testing critical private logic when warranted.
+description: Apply this repository's pytest testing principle whenever writing, revising, or reviewing Python tests. Prefer real collaborators, behavior-focused test classes, parametrized cases, reusable fixtures, mirrored unit-test paths, and public-interface assertions while directly testing critical private logic when warranted.
 ---
 
 # Testing Principle
