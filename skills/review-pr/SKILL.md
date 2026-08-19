@@ -8,6 +8,7 @@ description: >-
   SOLID design, surgical scope, and extensibility (not overfit), then posts a single
   REQUEST_CHANGES / APPROVE / COMMENT review to the PR.
 allowed-tools: Bash, Read, Grep, Glob
+disable-model-invocation: true
 ---
 
 # Review PR (Gitea)
