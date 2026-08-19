@@ -20,7 +20,7 @@ These are the canonical package names for the coding-principle, code-guide, life
 Install all skills globally for Codex:
 
 ```sh
-npx skills add what-in-the-nim/skillets -g --agent codex --skill code-principle --skill code-guide --skill lifecycle-design --skill testing-principle --skill pytest-skill --skill review-pr --yes
+npx skills add what-in-the-nim/skillets -g
 ```
 
 Use `--list` to inspect the available skills before installing, or omit `-g` to install them only in the current project.
