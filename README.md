@@ -28,17 +28,11 @@ Use `--list` to inspect the available skills before installing, or omit `-g` to 
 
 ### From a local clone
 
-Clone the repository, then symlink the skills into an agent's personal skill directory:
+Clone the repository, then run the installer from the clone root:
 
 ```sh
-mkdir -p ~/.agents/skills
-ln -s "$PWD/skills/code-principle" ~/.agents/skills/code-principle
-ln -s "$PWD/skills/code-guide" ~/.agents/skills/code-guide
-ln -s "$PWD/skills/lifecycle-design" ~/.agents/skills/lifecycle-design
-ln -s "$PWD/skills/testing-principle" ~/.agents/skills/testing-principle
-ln -s "$PWD/skills/pytest-skill" ~/.agents/skills/pytest-skill
-ln -s "$PWD/skills/gitea" ~/.agents/skills/gitea
-ln -s "$PWD/skills/review-pr" ~/.agents/skills/review-pr
+./scripts/install-local.sh
 ```
 
-Replace `$PWD` with the clone's absolute path when running the commands from another directory. Existing installations at those destinations must be moved or removed first.
+The script symlinks every skill into `~/.agents/skills`. Existing installations at those
+destinations must be moved or removed first.
