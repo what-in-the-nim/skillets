@@ -11,11 +11,11 @@ disable-model-invocation: true
 Review a Gitea pull request and post the review back to the PR. The input is a single PR
 number (e.g. `743`).
 
-## Connection
+## Gitea connection
 
-Use `tea` for every Gitea operation. It discovers the repository and matching login from
-the current repo's Git remote. Run `tea logins list` if discovery fails; use `--login`
-or `--repo` only when the configured remote is ambiguous.
+Apply the model-invoked `gitea` skill for every Gitea operation in this workflow. It is
+the source of truth for repository and login discovery, target disambiguation, tea
+command selection, authentication errors, and mutation verification.
 
 ## Workflow
 
@@ -73,5 +73,5 @@ the three commands. Relay the verdict and PR URL from step 1 to the user.
 
 - Keep the whole review as one review submission, not many inline comments, unless the
   user asks for inline line comments.
-- If `tea` cannot find or authenticate the repository, inspect `tea logins list` and the
-  Git remote before retrying with an explicit `--login` or `--repo`.
+- If a `tea` operation fails, return to the `gitea` skill's target-resolution and
+  authentication guidance before retrying with an explicit target.

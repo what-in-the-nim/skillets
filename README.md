@@ -9,9 +9,10 @@ Personal, reusable skills for agentic coding.
 - [`lifecycle-design`](skills/lifecycle-design/SKILL.md) — lifecycle guidance for state, invariants, ownership, cleanup, concurrency, failure, and API design.
 - [`testing-principle`](skills/testing-principle/SKILL.md) — pytest guidance for realistic collaborators, test organization, fixtures, parametrization, and assertions.
 - [`pytest-skill`](skills/pytest-skill/SKILL.md) — pytest examples and reference material for fixtures, parametrization, markers, mocking, and configuration.
+- [`gitea`](skills/gitea/SKILL.md) — model-invoked Gitea operations through the `tea` CLI.
 - [`review-pr`](skills/review-pr/SKILL.md) — Gitea pull-request review workflow using the `tea` CLI.
 
-These are the canonical package names for the coding-principle, code-guide, lifecycle-design, test-principle, pytest, and Gitea PR-review skills.
+These are the canonical package names for the coding-principle, code-guide, lifecycle-design, testing-principle, pytest, Gitea, and Gitea PR-review skills.
 
 ## Install
 
@@ -36,6 +37,7 @@ ln -s "$PWD/skills/code-guide" ~/.agents/skills/code-guide
 ln -s "$PWD/skills/lifecycle-design" ~/.agents/skills/lifecycle-design
 ln -s "$PWD/skills/testing-principle" ~/.agents/skills/testing-principle
 ln -s "$PWD/skills/pytest-skill" ~/.agents/skills/pytest-skill
+ln -s "$PWD/skills/gitea" ~/.agents/skills/gitea
 ln -s "$PWD/skills/review-pr" ~/.agents/skills/review-pr
 ```
 
