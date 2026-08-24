@@ -9,7 +9,7 @@ Personal, reusable skills for agentic coding.
 - [`lifecycle-design`](skills/lifecycle-design/SKILL.md) — lifecycle guidance for state, invariants, ownership, cleanup, concurrency, failure, and API design.
 - [`testing-principle`](skills/testing-principle/SKILL.md) — pytest guidance for realistic collaborators, test organization, fixtures, parametrization, and assertions.
 - [`pytest-skill`](skills/pytest-skill/SKILL.md) — pytest examples and reference material for fixtures, parametrization, markers, mocking, and configuration.
-- [`review-pr`](skills/review-pr/SKILL.md) — Gitea pull-request review workflow with a reusable API helper.
+- [`review-pr`](skills/review-pr/SKILL.md) — Gitea pull-request review workflow using the `tea` CLI.
 
 These are the canonical package names for the coding-principle, code-guide, lifecycle-design, test-principle, pytest, and Gitea PR-review skills.
 
