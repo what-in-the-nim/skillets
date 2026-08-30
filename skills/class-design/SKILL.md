@@ -11,6 +11,14 @@ Apply these principles when designing, modifying, or reviewing a class. Make cla
 
 A good class owns one coherent concept, maintains its invariants, controls its lifecycle, and exposes only the interface needed to use it correctly.
 
+Default to reviewing existing classes and their usage. For greenfield work, apply the same checks before implementation.
+
+## Review Scope
+
+Review the class with code that constructs, calls, wraps, subclasses, configures, tests, or owns its resources, lifecycle, and background tasks. Trace real call paths and contracts, not just the class in isolation.
+
+Treat caller workarounds—repeated validation, leaked internals, manual ordering, duplicated state, defensive flags, or broad exception handling—as possible class-design smells.
+
 ## Design Rules
 
 ### 1. Single Responsibility
@@ -87,6 +95,7 @@ Ask:
 - Are cleanup and cancellation safe when repeated or interrupted?
 - Who owns resources and background tasks, and what happens on failure?
 - Are dependencies, ownership boundaries, and concurrency rules explicit?
+- What must callers work around, repeat, or coordinate, and what smells appear in that peripheral code?
 - Are the interface, fields, and methods larger or less cohesive than necessary?
 - Would composition simplify the design?
 - Does this need to be a class?
@@ -96,9 +105,9 @@ Ask:
 For each problem, report:
 
 1. **Rule** — name and number of the violated design rule.
-2. **Failure mode** — the concrete misuse, invalid state, lifecycle bug, or other failure enabled.
+2. **Failure mode** — the concrete misuse, invalid state, lifecycle bug, or other failure enabled in the class or its callers.
 3. **Smallest reproducible example** — minimal code that demonstrates the problem.
-4. **Proposed remedy** — after reviewing all findings together, identify any shared root cause. If a better overall class design is justified, propose it; otherwise give a focused change.
+4. **Proposed remedy** — after reviewing all findings and relevant usage together, identify any shared root cause. If a better overall class design is justified, propose it; otherwise give a focused change.
 
 Keep each example focused on one finding.
 
@@ -112,6 +121,7 @@ When a redesign is justified, describe:
 - Its explicit state and invariants.
 - Its public interface and dependencies.
 - Its lifecycle, resource ownership, and concurrency boundaries.
+- The boundary between the class and its callers.
 - How the design addresses each related finding.
 
 Use a focused fix when findings are independent or redesign would add complexity without improving correctness. Do not force theoretical abstractions.
