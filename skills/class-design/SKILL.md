@@ -184,6 +184,20 @@ For each problem found, report:
 1. **Rule** — identify the violated design rule by name and number.
 2. **Failure mode** — explain the concrete misuse, invalid state, lifecycle bug, or other failure the problem enables.
 3. **Smallest reproducible example** — show the minimal code that demonstrates the problem and makes the failure easy to understand.
-4. **Proposed fix** — recommend the smallest design change that addresses the identified problem.
+4. **Proposed remedy** — after considering all findings together, determine whether this problem shares a root cause with other issues. When a broader design problem is valid, propose a better class design that addresses the related problems together. Otherwise, recommend a focused change for this problem.
 
 Keep each example focused on one finding. Avoid recommending abstractions solely for theoretical cleanliness.
+
+## Design Synthesis
+
+Review the complete set of findings before settling on remedies. When several problems arise from unclear ownership, invalid state combinations, excessive interface surface, tangled responsibilities, hidden dependencies, or unsafe lifecycle and concurrency design, treat them as evidence of a shared class-design problem rather than as isolated defects.
+
+When a better overall design is justified, describe:
+
+- The cohesive concept and responsibility the class should own.
+- The state and invariants it should make explicit.
+- The public interface and dependencies it should expose.
+- The lifecycle, resource ownership, and concurrency boundaries it should control.
+- How the proposed design addresses each related finding.
+
+Use a focused fix when the findings are independent or when a redesign would add complexity without improving correctness. Do not force a redesign merely to make the code theoretically cleaner.
