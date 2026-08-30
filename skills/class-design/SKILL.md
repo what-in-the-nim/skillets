@@ -177,4 +177,13 @@ Before accepting a design, ask:
 - Would composition simplify the design?
 - Does this need to be a class at all?
 
-When identifying a problem, explain the violated principle, the concrete failure mode it enables, and the smallest design change that addresses it. Avoid recommending abstractions solely for theoretical cleanliness.
+## Review Finding Format
+
+For each problem found, report:
+
+1. **Rule** — identify the violated design rule by name and number.
+2. **Failure mode** — explain the concrete misuse, invalid state, lifecycle bug, or other failure the problem enables.
+3. **Smallest reproducible example** — show the minimal code that demonstrates the problem and makes the failure easy to understand.
+4. **Proposed fix** — recommend the smallest design change that addresses the identified problem.
+
+Keep each example focused on one finding. Avoid recommending abstractions solely for theoretical cleanliness.
