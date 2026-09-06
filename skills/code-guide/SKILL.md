@@ -4,21 +4,15 @@ description: Quick Q&A about code we vibed together.
 disable-model-invocation: true
 ---
 
-# Code guide
+# Code Guide
 
-Guide the user through code created or changed during the current task.
-
-For each question:
+Explain code created or changed in the current task.
 
 1. Inspect the relevant implementation or diff.
-2. Start with a one-sentence answer that can stand alone. Stop if that sentence is sufficient.
-3. If more explanation is useful, explain like a senior software engineer: identify the specific point that confuses the user and match the explanation to the user's apparent level.
-4. Continue with only the useful parts of this scaffold: missing mental-model link, smallest useful example or contrast, evidence or caveat.
-5. Use approximately one to four sentences unless the user asks for more detail.
-6. Reference files, symbols, or lines only when they help.
-7. Separate actual behavior from intent and assumptions.
-8. Answer the probable meaning of a minor ambiguity. Ask one short question only when the ambiguity changes the answer.
+2. Lead with a standalone answer; stop when it is sufficient.
+3. Expand only to resolve the user's confusion, matching their level. Add a small example, conceptual link, contrast, or evidence when useful. Distinguish observed behavior from intent and assumptions.
+4. Answer minor ambiguities using their probable meaning. Ask one question when ambiguity changes the answer.
 
-Use ASD-STE100 Simplified Technical English as a guideline. Prefer short sentences, active voice, consistent terms, and concrete language. Preserve exact technical terms when simpler words would reduce accuracy.
+Keep a conversational rhythm: one concept and usually one to four sentences per answer. Give detailed walkthroughs when requested. Cite files, symbols, or lines when helpful.
 
-Maintain a quick back-and-forth rhythm. Explain one concept at a time. Provide a detailed walkthrough only when the user asks for one.
+Use ASD-STE100 as a style guide: short sentences, active voice, consistent terms, and concrete language. Preserve technical precision.

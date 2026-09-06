@@ -5,123 +5,36 @@ description: Apply whenever designing, modifying, or reviewing a class.
 
 # Class Design
 
-Apply these principles when designing, modifying, or reviewing a class. Make classes cohesive, hard to misuse, and safe throughout their lifecycle.
+A class owns one coherent concept, protects its invariants, and exposes a small, usable interface.
 
-## Core Principle
+## Scope
 
-A good class owns one coherent concept, maintains its invariants, controls its lifecycle, and exposes only the interface needed to use it correctly.
+Trace constructors, callers, wrappers, subclasses, configuration, tests, and resource owners. Inspect caller workarounds: repeated validation, leaked internals, manual ordering, duplicated state, defensive flags, and broad exception handling.
 
-Default to reviewing existing classes and their usage. For greenfield work, apply the same checks before implementation.
+During implementation, apply these checks internally and keep edits within scope. Propose broader redesigns only when justified; implement them within existing authorization. For stateless pytest grouping classes, apply `testing-principle` instead of production lifecycle and class-justification rules.
 
-## Review Scope
+## Rules
 
-Review the class with code that constructs, calls, wraps, subclasses, configures, tests, or owns its resources, lifecycle, and background tasks. Trace real call paths and contracts, not just the class in isolation.
+1. **Single responsibility.** Own one responsibility; split unrelated responsibilities.
+2. **Cohesion.** Keep fields and methods focused on the same concept; separate independent state groups.
+3. **Minimal interface.** Expose necessary operations, preferably at the level of the caller's task. Each public method or mutable property adds states and misuse paths.
+4. **Valid states.** Use explicit states or constrained representations to prevent contradictory combinations. Define transitions for non-trivial lifecycles.
+5. **Lifecycle.** Define when the object is usable, allowed operations, resource ownership, cleanup, and initialization or shutdown failure behavior.
+6. **Idempotent cleanup.** Repeated close, stop, cancel, cleanup, or unsubscribe calls must not corrupt state, leak resources, or race.
+7. **Invariants.** Enforce correctness internally. Encapsulate operations that must happen together rather than relying on caller sequencing.
+8. **Encapsulation.** Keep queues, locks, tasks, counters, transports, and caches private unless callers need them.
+9. **Explicit dependencies.** Inject significant dependencies when internal construction would obscure configuration, testing, replacement, or ownership.
+10. **Temporal coupling.** Simplify required call ordering; document and enforce remaining sequences through the interface or lifecycle states.
+11. **Abstraction level.** Keep methods at consistent levels; delegate parsing, protocols, serialization, and persistence to appropriate components.
+12. **Composition.** Prefer composition to deep inheritance. Use inheritance for substitutability, not implementation reuse alone.
+13. **Concurrency ownership.** Define who creates, cancels, and awaits tasks; failure propagation; allowed concurrency; lifecycle races; and whether tasks can outlive the object. Owners clean up background work.
+14. **Failure safety.** Preserve a defined, valid state after partial initialization, shutdown, cancellation, timeout, or failed transitions.
+15. **Justify the class.** Require meaningful state, identity, invariants, lifecycle, resource ownership, encapsulation, polymorphism, or cohesive behavior. Otherwise use functions or modules.
 
-Treat caller workarounds—repeated validation, leaked internals, manual ordering, duplicated state, defensive flags, or broad exception handling—as possible class-design smells.
+## Review
 
-## Design Rules
+Prioritize ownership, valid states, lifecycle, concurrency, failure and cancellation, idempotency, cohesion, interface, dependencies, then implementation structure. Correctness and misuse prevention outrank stylistic purity.
 
-### 1. Single Responsibility
+For requested reviews, report each finding as **rule number/name → concrete failure mode → minimal reproducing code → remedy**. Keep each example focused. If another review workflow owns the report, fit these details into its format. During implementation, report only findings affecting the requested change.
 
-Give the class one clear responsibility. Split unrelated responsibilities into separate classes.
-
-### 2. High Cohesion
-
-Keep fields and methods focused on the same concept. Separate groups that operate on mostly independent state.
-
-### 3. Minimal Public Interface
-
-Expose only necessary operations. Prefer high-level methods over caller-coordinated implementation steps. Each public method or mutable property adds states and misuse paths.
-
-### 4. Make Invalid States Hard to Represent
-
-Prevent contradictory combinations with explicit states or constrained representations instead of loosely related booleans. Identify valid states and transitions for non-trivial lifecycles.
-
-### 5. Explicit Lifecycle
-
-For stateful or resource-owning classes, define when the object is usable, its states and valid transitions, allowed operations, cleanup, and initialization or shutdown failure behavior. Make ownership visible in the API.
-
-### 6. Idempotent Lifecycle Operations
-
-Repeated `close()`, `stop()`, `cancel()`, cleanup, or unsubscribe calls should be safe: no corruption, leaks, or races.
-
-### 7. Protect Invariants Internally
-
-The class must maintain its own correctness. Encapsulate operations that must happen together behind a higher-level method instead of relying on caller sequencing.
-
-### 8. Encapsulate Implementation Details
-
-Keep queues, locks, tasks, counters, transports, caches, and similar mechanisms private unless callers genuinely need them.
-
-### 9. Explicit Dependencies
-
-Expose significant dependencies through constructors or deliberate injection points. Avoid silently constructing dependencies when it obscures configuration, testing, replacement, or ownership.
-
-### 10. Minimize Temporal Coupling
-
-Avoid undocumented sequences such as `initialize → prepare → start → read → stop → cleanup`. Simplify required ordering, enforce it through the API, or represent it with lifecycle states.
-
-### 11. Consistent Abstraction Level
-
-Keep methods at similar abstraction levels. Delegate parsing, protocol handling, serialization, persistence, and other low-level work to appropriate components.
-
-### 12. Prefer Composition
-
-Compose small, explicit components instead of building deep inheritance hierarchies. Use inheritance for genuine substitutability, not implementation reuse alone.
-
-### 13. Explicit Concurrency Ownership
-
-For concurrent or asynchronous classes, define who creates, owns, cancels, and awaits each task; how failures propagate; whether concurrent operations are allowed; how lifecycle races are handled; and whether tasks may outlive the object. Components that create background work should participate in cleanup.
-
-### 14. Preserve Invariants on Failure
-
-Every operation must leave a defined, valid state on partial initialization or shutdown, cancellation, timeout, or transition failure. Avoid ambiguous half-initialized or half-closed states.
-
-### 15. Justify the Class
-
-Introduce a class only when it provides meaningful state, identity, invariants, lifecycle or resource ownership, encapsulation, polymorphism, or cohesive behavior. Otherwise prefer functions or modules.
-
-## Review Priority
-
-Evaluate issues in this order: ownership; valid states and invariants; lifecycle; concurrency; failure and cancellation; idempotency; cohesion and responsibility; public interface; dependencies; abstraction and implementation structure. Prioritize correctness and misuse prevention over stylistic purity.
-
-## Review Questions
-
-Ask:
-
-- What concept, state, and invariants does this class own?
-- What are its valid lifecycle states, transitions, and allowed operations?
-- Can callers create invalid states or call methods in the wrong order?
-- Are cleanup and cancellation safe when repeated or interrupted?
-- Who owns resources and background tasks, and what happens on failure?
-- Are dependencies, ownership boundaries, and concurrency rules explicit?
-- What must callers work around, repeat, or coordinate, and what smells appear in that peripheral code?
-- Are the interface, fields, and methods larger or less cohesive than necessary?
-- Would composition simplify the design?
-- Does this need to be a class?
-
-## Review Finding Format
-
-For each problem, report:
-
-1. **Rule** — name and number of the violated design rule.
-2. **Failure mode** — the concrete misuse, invalid state, lifecycle bug, or other failure enabled in the class or its callers.
-3. **Smallest reproducible example** — minimal code that demonstrates the problem.
-4. **Proposed remedy** — after reviewing all findings and relevant usage together, identify any shared root cause. If a better overall class design is justified, propose it; otherwise give a focused change.
-
-Keep each example focused on one finding.
-
-## Design Synthesis
-
-Assess the complete set of findings before choosing remedies. Treat recurring problems involving ownership, state, interface size, responsibilities, dependencies, lifecycle, or concurrency as evidence of a shared design flaw rather than isolated defects.
-
-When a redesign is justified, describe:
-
-- The concept and responsibility the class should own.
-- Its explicit state and invariants.
-- Its public interface and dependencies.
-- Its lifecycle, resource ownership, and concurrency boundaries.
-- The boundary between the class and its callers.
-- How the design addresses each related finding.
-
-Use a focused fix when findings are independent or redesign would add complexity without improving correctness. Do not force theoretical abstractions.
+Assess all findings and relevant usage before choosing remedies. Shared causes may justify redesign; independent defects call for focused fixes. For a redesign, describe responsibility, state and invariants, interface and dependencies, lifecycle and concurrency ownership, caller responsibilities, and how each finding is addressed. Avoid theoretical abstractions.

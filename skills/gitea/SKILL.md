@@ -1,82 +1,35 @@
 ---
 name: gitea
-description: >-
-  Use for Gitea work through the `tea` CLI: repository and login discovery, pull
-  requests, issues, comments, labels, releases, branches, actions, and authenticated
-  Gitea API requests. Trigger when a task mentions Gitea, `tea`, a Gitea pull request
-  or issue, or a Gitea review or comment.
+description: Use tea for Gitea repository/login discovery, pull requests, issues, comments, labels, releases, branches, actions, and authenticated API operations.
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
 # Gitea
 
-Use `tea` as the Gitea client. Run it from the target repository so it can derive the
-repository and matching login from the Git remote.
-
 ## Resolve the target
 
-1. Run from the repository root. If the target is unclear, inspect it with `git remote -v`.
-2. Let `tea` discover the login from the current remote.
-3. If discovery fails, inspect configured servers with `tea logins list`.
-4. When more than one remote or login is possible, make the target explicit with the
-   command's supported `--remote`, `--login`, or `--repo` option.
-5. Use `tea whoami` when the acting identity affects the result.
+Run `tea` from the target repository so it discovers the repository and login from the Git remote.
 
-Treat the repository, Gitea server, login, and requested entity as resolved only when
-the command target is unambiguous. If no login is configured, report that the user must
-complete `tea logins add`; keep credentials in tea's configuration rather than in
-command arguments or repository files.
+- Inspect `git remote -v` when the repository is unclear, and `tea logins list` when login discovery fails.
+- Disambiguate multiple targets with supported `--remote`, `--login`, or `--repo` options. Use `tea whoami` when the acting identity matters.
+- If no login exists, direct the user to `tea logins add`. Keep credentials in tea's configuration, outside command arguments and repository files.
 
-## Choose the operation
+Proceed when the repository, server, login, and entity are unambiguous.
 
-- Prefer the entity command (`tea pulls`, `tea issues`, `tea comments`, `tea labels`,
-  `tea releases`, and so on) over a raw HTTP client.
-- Use `--output yaml` or `--output json` when another step must consume the result.
-- Use `tea --help` or `<entity> --help` when syntax or available fields is uncertain.
-- Use `tea api` only when the entity command does not expose the needed operation. It
-  still uses tea's authenticated context; quote endpoints containing `?` or `&`.
+## Choose the command
 
-## Read before changing
+Prefer entity commands (`tea pulls`, `tea issues`, etc.). Use `tea api` when they lack the operation. Consult `tea --help` or the command's `--help` for uncertain syntax or fields.
 
-Read the current entity before a state-changing operation. For example:
+Use YAML or JSON output for downstream processing. Quote API endpoints containing `?` or `&`.
 
-```bash
-N=743
-tea pulls "$N" --fields index,title,state,author,url,body,mergeable,base,head --output yaml
-tea issues "$N" --fields index,title,state,author,url,body,labels --output yaml
-tea comments "$N" --output yaml
-```
+For reviews, fetch the full diff with `tea pulls "$N" --fields diff --output simple`. Use dedicated approve/reject commands for non-interactive verdicts; `tea pulls review` requires interaction. A normal `tea comments add` comment is distinct from a pull-request review. Review submission examples live in [review-pr](../review-pr/SKILL.md).
 
-Use the full diff field for pull-request review context:
+## Read, change, verify
 
-```bash
-tea pulls "$N" --fields diff --output simple
-```
+1. Read the current entity before changing it.
+2. Verify the target and requested change from available evidence. Proceed within existing authorization; ask only when the target or authorization remains unclear.
+3. Keep long bodies in scratch Markdown or JSON files without credentials. Pass their contents to tea.
+4. Perform exactly the requested mutation. Create, edit, close, reopen, approve, reject, merge, delete, comment, and non-GET API calls are mutations.
+5. Inspect the response or re-read the entity. Report the verified result or server error; empty output alone does not establish success.
 
-## Change safely
-
-Treat create, edit, close, reopen, approve, reject, merge, delete, comment, and
-non-`GET` `tea api` calls as mutations.
-
-- Confirm the resolved target and requested change before mutating it.
-- Keep long bodies in a scratch Markdown or JSON file, then pass the file contents to
-  tea; never put credentials in those files.
-- Run exactly the requested mutation and inspect its output or re-read the entity.
-- Report the actual result, including any server error, instead of inferring success
-  from an empty response.
-
-For non-interactive pull-request verdicts, use the dedicated commands:
-
-```bash
-BODY_FILE=/tmp/gitea-body.md
-tea pulls approve "$N" "$(cat "$BODY_FILE")"
-tea pulls reject "$N" "$(cat "$BODY_FILE")"
-```
-
-Use `tea comments add` for a normal issue or pull-request comment. `tea pulls review`
-is interactive; use it only when the surrounding workflow provides that interaction.
-
-## Completion
-
-A Gitea operation is complete when tea ran against an unambiguous target, the requested
-read or mutation returned, and the result was checked and reported.
+Complete when the requested operation has run against the resolved target and its result has been checked and reported.

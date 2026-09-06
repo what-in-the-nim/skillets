@@ -1,43 +1,28 @@
 ---
 name: testing-principle
-description: Apply this repository's pytest testing principle whenever writing, revising, or reviewing Python tests. Prefer real collaborators, behavior-focused test classes, parametrized cases, reusable fixtures, mirrored unit-test paths, and public-interface assertions while directly testing critical private logic when warranted.
+description: Apply behavior-focused pytest design when writing, revising, or reviewing Python tests.
 ---
 
 # Testing Principle
 
-Write pytest tests that maximize confidence and survive refactoring. Optimize for realistic behavior and readability before test speed or isolation.
+Optimize for realistic behavior and readability before speed or isolation.
+
+## Composition
+
+Explicit user requirements and repository conventions come first. TDD controls test-first sequencing; this skill controls test design, including the private-logic exception below. Preserve agreed test boundaries; resolve conflicts with an explicit public-only requirement before adding private tests. Use [pytest-skill](../pytest-skill/SKILL.md) for syntax.
 
 ## Process
 
-1. Locate the source module and its public interface, then classify the test as unit or integration. Mirror unit tests under `tests/unit`; for example, `src/acme/webhooks/sender.py` maps to `tests/unit/acme/webhooks/test_sender.py`. Place integration tests under `tests/integration` according to the boundary or workflow they exercise.
-2. Identify observable behaviors, failure modes, and input boundaries. Group related tests in behavior-named classes such as `TestWebhookFail`; do not use test classes merely to share setup.
-3. Choose the most real execution path practical. Use real domain objects and in-process implementations even when they make the test more expensive. Replace a collaborator only at a boundary that is unavailable, destructive, nondeterministic, or prohibitively costly, and prefer a small fake or local test implementation over interaction-heavy mocks. For a path that can call a hosted LLM and consume billed or quota tokens, register an explicit `--run-live-llm` pytest option and use a fixture to select the provider: without the flag, return a deterministic mocked LLM response that exercises parsing and downstream behavior; with the flag, call the real LLM through the same interface. Run the test in both modes rather than skipping it by default.
-4. Move complex or repeated construction into fixtures. Give each fixture the narrowest scope that safely matches the object's lifecycle: function for mutable or stateful objects, class or module for safely shared expensive setup, and session only for immutable or explicitly resettable resources. Use factory fixtures when cases need several variants.
-5. Collapse cases with identical behavior into `pytest.mark.parametrize`. Include normal, boundary, empty, invalid, and regression inputs as relevant; add readable `ids` when raw values do not explain the case. Keep separate tests when setup, action, or expected behavior materially differs.
-6. Assert through the public interface and on externally observable outcomes by default. Avoid assertions tied to call order, internal representation, or incidental implementation details. Directly test private logic only when it is critical, has meaningful complexity or safety impact, and cannot be covered precisely enough through the public interface; keep such tests few and acknowledge the tighter coupling in the test name or a short comment.
-7. Run the narrowest relevant pytest target, then inspect the collected node IDs to confirm the file, class, and parametrized cases are easy to find and trigger.
+1. **Locate.** Identify the source module and public interface; classify unit versus integration coverage. Preserve existing test layout. For a new layout, mirror source paths under `tests/unit` (`src/acme/webhooks/sender.py` → `tests/unit/acme/webhooks/test_sender.py`); organize `tests/integration` by boundary or workflow.
+2. **Model behavior.** Identify outcomes, failure modes, and input boundaries. Group related scenarios in stateless, behavior-named classes such as `TestWebhookFail`, without `__init__`. Classes represent behaviors, not production classes or shared setup.
+3. **Choose collaborators.** Prefer real domain objects and in-process implementations. Replace only unavailable, destructive, nondeterministic, or prohibitively costly boundaries; runtime alone does not justify mocking. Prefer small fakes to interaction-heavy mocks. For LLM calls, apply the live-testing section below.
+4. **Build fixtures.** Move complex or repeated construction into fixtures; keep actions and assertions visible. Use factory fixtures for variants. Choose the narrowest safe scope: function for mutable state, class/module for safely shared expensive setup, session for immutable or explicitly resettable resources. Broader scope requires reliable isolation.
+5. **Parametrize.** Combine input variations sharing behavior; separate cases with different setup, action, or outcomes. Cover relevant normal, boundary, empty, invalid, and regression inputs. Add readable IDs when values alone are unclear.
+6. **Assert contracts.** Prefer public outcomes and state over call order, representation, or incidental interactions. Private tests are exceptions for critical, complex or safety-sensitive logic that public tests cannot cover precisely enough. Keep them few, justify their coupling in the name or a short comment, and avoid using them to bypass awkward public behavior.
+7. **Verify.** Run the narrowest relevant pytest target. Inspect collected node IDs for discoverable files, classes, and cases; verify selection by file and class/node ID. Audit every new or changed test against steps 1–6.
 
-## Rules
+## Live LLM testing
 
-- Real objects are the default; mocks require a concrete boundary reason. Test runtime alone is not sufficient reason to mock.
-- The `--run-live-llm` flag switches only the LLM boundary: default runs use a representative mocked response, while flagged runs use the real provider.
-- Prefer state and result assertions over mock interaction assertions.
-- A test class represents one behavior or scenario, not the production class. Keep it stateless and omit `__init__`.
-- Parametrize data variations, not unrelated behaviors.
-- Fixtures hide construction noise, not the behavior under test. Keep the important action and assertions visible in each test.
-- Broader fixture scope is valid only when isolation remains explicit and reliable.
-- Mirror source paths under `tests/unit` so a developer can infer either file's location from the other.
-- Most tests target public contracts; critical private tests are deliberate exceptions, not a shortcut around awkward public behavior.
+For tests that can consume hosted LLM tokens, reuse an existing live-test switch or add `--run-live-llm`. A fixture selects deterministic mocked responses by default and the real provider in live mode. Change only the LLM boundary: run parsing and downstream behavior in both modes, rather than skipping the test by default.
 
-## Completion check
-
-Before finishing, verify every new or changed test:
-
-- uses real collaborators unless its replacement has a stated boundary reason;
-- runs every LLM-dependent test with a mocked response by default and switches the same test to the real provider only with `--run-live-llm`;
-- sits in `tests/unit` at the mirrored source path, or in `tests/integration` for a boundary-spanning test, and uses a behavior-named class where related cases exist;
-- uses parametrization for genuine input variations;
-- moves complex repeated setup into correctly scoped fixtures;
-- primarily asserts public, observable behavior;
-- keeps any private-logic coverage narrowly justified; and
-- passes when run by file and by its class or node ID.
+Run live mode only when requested or required by project validation policy, with credentials available. Otherwise report live coverage as unverified.
