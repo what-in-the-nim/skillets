@@ -45,6 +45,8 @@ Add `--check-mermaid` when `mmdc` is installed; it validates all four diagrams a
 
 Keep the report glanceable: lead with the recommendation, then paired current/proposed diagrams, then changes. Put supporting evidence, validation, and tradeoffs in the template's collapsed details. Mermaid color meanings are author-defined; do not imply that the legend styles diagrams automatically.
 
+Write content as bullets: one idea per `<li>`, usually 3–7 items per group. Keep paragraphs to one or two concise sentences; use tables for repeated comparisons and tests.
+
 Done when the HTML has all eight sections, valid navigation and IDs, four rendered diagrams, escaped content, and no unresolved tokens.
 
 ## Prove
