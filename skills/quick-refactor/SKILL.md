@@ -1,0 +1,53 @@
+---
+name: quick-refactor
+description: Propose a small refactor PR that improves encapsulation, abstraction, and testability, delivered as an HTML report with fixed sections and Mermaid diagrams. Use when the user asks for a quick refactor opportunity or a before-and-after refactor proposal.
+---
+
+# Quick Refactor
+
+Find one cohesive responsibility whose ownership and tests can improve in a small PR. Preserve behavior and public contracts.
+
+## Trace
+
+- Read repo instructions and status; preserve unrelated work.
+- Inspect the target, constructor, callers, wiring, collaborators, and tests. Verify the current code.
+- Trace state, dependencies, side effects, and lifecycle. For async resources, identify who creates, awaits, cancels, and closes them.
+- Note oversized test graphs and private-field assertions.
+
+Done when exact source locations support the candidate's behavior, dependencies, lifecycle, and tests.
+
+## Bound
+
+- Prefer an existing owner; add a class only for state, invariants, or lifecycle. Use functions for stateless work.
+- Give the new owner a narrow interface and dependencies, not the whole worker or callback bag.
+- Compare at most two options; recommend the smallest useful one, or say none exists.
+- Keep policy with its domain owner. Separate bug fixes and behavior changes from the refactor.
+
+Done when responsibility, dependencies, files, and tests are bounded.
+
+## Own
+
+Show what moves: methods, state, duplicates, interface, caller duties, ordering, resources, failures, cancellation, and reusable teardown guarantees. Every affected behavior and state must have one owner; the interface must be testable without the original large object.
+
+## Render
+
+Create one-string-per-token JSON for [templates/proposal.html](templates/proposal.html). `_HTML` tokens are trusted fragments; all others are text. Fill every fixed section and keep the template unchanged.
+
+Run from the project root:
+
+```sh
+python skills/quick-refactor/scripts/render_proposal.py proposal.json --output <report-path>
+```
+
+The renderer loads the template, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Use `classDiagram` for current/proposed structure and `sequenceDiagram` for the workflow; include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
+
+Done when the HTML has all eight sections, valid navigation and IDs, rendered diagrams, escaped content, and no unresolved tokens.
+
+## Prove
+
+- Propose focused interface tests asserting results or collaborator effects; retain integration tests for ordering, persistence, and teardown.
+- Cover meaningful success, failure, timeout, rejection, skip, and cancellation paths. Distinguish proposed checks from executed checks.
+- Implement only when authorized. Commit, push, or open a PR only when requested.
+- Preview the HTML when possible; inspect overflow, diagrams, and readability. Report preview limits honestly.
+
+Deliver the HTML link, a short recommendation, and validation status. Do not duplicate the report in chat.

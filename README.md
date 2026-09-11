@@ -11,8 +11,9 @@ Personal, reusable skills for agentic coding.
 - [`pytest-skill`](skills/pytest-skill/SKILL.md) — pytest examples and reference material for fixtures, parametrization, markers, mocking, and configuration.
 - [`gitea`](skills/gitea/SKILL.md) — model-invoked Gitea operations through the `tea` CLI.
 - [`review-pr`](skills/review-pr/SKILL.md) — Gitea pull-request review workflow using the `tea` CLI.
+- [`quick-refactor`](skills/quick-refactor/SKILL.md) — small refactor proposals with HTML reports and Mermaid diagrams.
 
-These are the canonical package names for the coding-principle, code-guide, class-design, testing-principle, pytest, Gitea, and Gitea PR-review skills.
+These are the canonical package names for the coding-principle, code-guide, class-design, testing-principle, pytest, quick-refactor, Gitea, and Gitea PR-review skills.
 
 ## Install
 

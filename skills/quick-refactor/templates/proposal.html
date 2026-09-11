@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}} — Quick Refactor</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #192536; background: #f3f5f8; line-height: 1.6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1120px; margin: auto; padding: 40px 24px 64px; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: #375d91; font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; margin: 8px 0; }
+    h2 { font-size: 1.3rem; margin-top: 0; }
+    h3 { font-size: 1rem; }
+    .meta, figcaption { color: #536176; font-size: .9rem; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 24px 0; }
+    a { color: #2457a5; text-underline-offset: 3px; }
+    section { background: white; border: 1px solid #dce2ea; border-radius: 12px; padding: 24px; margin: 20px 0; scroll-margin-top: 16px; }
+    .table-wrap, .diagram { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { padding: 12px; text-align: left; vertical-align: top; border-bottom: 1px solid #dce2ea; min-width: 130px; }
+    th { background: #eef3fa; }
+    pre { padding: 16px; background: #f3f5f8; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+    code { font-family: ui-monospace, monospace; font-size: .9em; }
+    figure { margin: 24px 0; }
+    figcaption { margin-bottom: 8px; font-weight: 600; }
+    .mermaid { background: white; }
+    .diagram svg { height: auto; }
+    #diagram-status { color: #8a3419; }
+    @media (max-width: 600px) { main { padding: 24px 12px; } section { padding: 16px; } }
+    @media print { body { background: white; } main { max-width: none; padding: 0; } nav { display: none; } section { border: 0; padding: 12px 0; } figure, tr { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Quick refactor · Proposal</div>
+    <h1>{{TITLE}}</h1>
+    <p class="meta">{{TARGET}} · {{REVISION}} · {{DATE}}</p>
+  </header>
+  <nav aria-label="Proposal sections">
+    <a href="#recommendation">Recommendation</a><a href="#evidence">Evidence</a>
+    <a href="#comparison">Before / after</a><a href="#design">Design</a>
+    <a href="#classes">Class diagrams</a><a href="#sequence">Sequence</a>
+    <a href="#validation">Validation</a><a href="#scope">PR scope</a>
+  </nav>
+
+  <section id="recommendation" aria-labelledby="recommendation-title">
+    <h2 id="recommendation-title">1. Recommendation</h2>
+    {{RECOMMENDATION_HTML}}
+  </section>
+  <section id="evidence" aria-labelledby="evidence-title">
+    <h2 id="evidence-title">2. Current behavior and evidence</h2>
+    {{EVIDENCE_HTML}}
+  </section>
+  <section id="comparison" aria-labelledby="comparison-title">
+    <h2 id="comparison-title">3. Before and after</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Concern</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Benefit</th></tr></thead>
+      <tbody>{{COMPARISON_ROWS_HTML}}</tbody>
+    </table></div>
+  </section>
+  <section id="design" aria-labelledby="design-title">
+    <h2 id="design-title">4. Proposed interface and ownership</h2>
+    {{DESIGN_HTML}}
+  </section>
+  <section id="classes" aria-labelledby="classes-title">
+    <h2 id="classes-title">5. Class diagrams</h2>
+    {{CLASS_NOTES_HTML}}
+    <figure><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
+    <figure><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
+  </section>
+  <section id="sequence" aria-labelledby="sequence-title">
+    <h2 id="sequence-title">6. Proposed sequence</h2>
+    {{SEQUENCE_NOTES_HTML}}
+    <figure><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{SEQUENCE_MERMAID}}</pre></div></figure>
+  </section>
+  <section id="validation" aria-labelledby="validation-title">
+    <h2 id="validation-title">7. Tests and acceptance criteria</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Scenario</th><th scope="col">Observable assertion</th><th scope="col">Test level</th><th scope="col">Status / evidence</th></tr></thead>
+      <tbody>{{TEST_ROWS_HTML}}</tbody>
+    </table></div>
+    {{VALIDATION_NOTES_HTML}}
+  </section>
+  <section id="scope" aria-labelledby="scope-title">
+    <h2 id="scope-title">8. PR scope and tradeoffs</h2>
+    <p><strong>Suggested PR title:</strong> {{PR_TITLE}}</p>
+    {{SCOPE_HTML}}
+  </section>
+  <p id="diagram-status" role="status" hidden></p>
+  <noscript><p>Enable JavaScript to render diagrams. Their Mermaid source is shown above.</p></noscript>
+</main>
+<script type="module">
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' });
+    await mermaid.run({ querySelector: '.mermaid' });
+  } catch (error) {
+    const status = document.getElementById('diagram-status');
+    status.hidden = false;
+    status.textContent = 'Diagrams could not render. Check network access and Mermaid syntax.';
+    console.error(error);
+  }
+</script>
+</body>
+</html>
