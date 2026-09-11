@@ -8,7 +8,7 @@
     :root { color-scheme: light; font-family: system-ui, sans-serif; color: #192536; background: #f3f5f8; line-height: 1.6; }
     * { box-sizing: border-box; }
     body { margin: 0; }
-    main { max-width: 1120px; margin: auto; padding: 40px 24px 64px; }
+    main { max-width: 1120px; margin: auto; padding: 40px 24px 64px; display: flex; flex-direction: column; }
     header { margin-bottom: 24px; }
     .eyebrow { color: #375d91; font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
     h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; margin: 8px 0; }
@@ -17,18 +17,38 @@
     .meta, figcaption { color: #536176; font-size: .9rem; }
     nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 24px 0; }
     a { color: #2457a5; text-underline-offset: 3px; }
-    section { background: white; border: 1px solid #dce2ea; border-radius: 12px; padding: 24px; margin: 20px 0; scroll-margin-top: 16px; }
+    section { background: white; border: 1px solid #dce2ea; border-radius: 12px; padding: 24px; margin: 20px 0; scroll-margin-top: 16px; order: 10; }
+    #recommendation { order: 1; border-top: 4px solid #375d91; }
+    #classes { order: 2; }
+    #sequence { order: 3; }
+    #comparison { order: 4; }
+    #design { order: 5; }
+    #evidence { order: 6; }
+    #validation { order: 7; }
+    #scope { order: 8; }
+    .diagram-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .diagram-card { min-width: 0; margin: 16px 0 0; }
+    .diagram-card pre { margin: 0; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: #536176; font-size: .85rem; margin-top: 12px; }
+    .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background: #9aa6b5; }
+    .legend .proposed::before { background: #4b8b68; }
+    .legend .removed::before { background: #b45b68; }
+    details { margin-top: 8px; }
+    summary { cursor: pointer; color: #2457a5; font-weight: 600; }
     .table-wrap, .diagram { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .95rem; }
     th, td { padding: 12px; text-align: left; vertical-align: top; border-bottom: 1px solid #dce2ea; min-width: 130px; }
     th { background: #eef3fa; }
     pre { padding: 16px; background: #f3f5f8; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
-    code { font-family: ui-monospace, monospace; font-size: .9em; }
+    code { font-family: ui-monospace, monospace; font-size: .9em; color: #8b3a62; background: #f8edf3; padding: .12em .32em; border-radius: 4px; }
+    pre code { color: inherit; background: none; padding: 0; border-radius: 0; }
     figure { margin: 24px 0; }
     figcaption { margin-bottom: 8px; font-weight: 600; }
     .mermaid { background: white; }
     .diagram svg { height: auto; }
     #diagram-status { color: #8a3419; }
+    #diagram-status, noscript { order: 20; }
+    @media (max-width: 700px) { .diagram-pair { grid-template-columns: 1fr; } }
     @media (max-width: 600px) { main { padding: 24px 12px; } section { padding: 16px; } }
     @media print { body { background: white; } main { max-width: none; padding: 0; } nav { display: none; } section { border: 0; padding: 12px 0; } figure, tr { break-inside: avoid; } }
   </style>
@@ -41,9 +61,9 @@
     <p class="meta">{{TARGET}} · {{REVISION}} · {{DATE}}</p>
   </header>
   <nav aria-label="Proposal sections">
-    <a href="#recommendation">Recommendation</a><a href="#evidence">Evidence</a>
-    <a href="#comparison">Before / after</a><a href="#design">Design</a>
-    <a href="#classes">Class diagrams</a><a href="#sequence">Sequence</a>
+    <a href="#recommendation">Summary</a><a href="#classes">Structure</a>
+    <a href="#sequence">Workflow</a><a href="#comparison">Changes</a>
+    <a href="#design">Design</a><a href="#evidence">Evidence</a>
     <a href="#validation">Validation</a><a href="#scope">PR scope</a>
   </nav>
 
@@ -53,7 +73,7 @@
   </section>
   <section id="evidence" aria-labelledby="evidence-title">
     <h2 id="evidence-title">2. Current behavior and evidence</h2>
-    {{EVIDENCE_HTML}}
+    <details><summary>Show evidence</summary>{{EVIDENCE_HTML}}</details>
   </section>
   <section id="comparison" aria-labelledby="comparison-title">
     <h2 id="comparison-title">3. Before and after</h2>
@@ -64,32 +84,39 @@
   </section>
   <section id="design" aria-labelledby="design-title">
     <h2 id="design-title">4. Proposed interface and ownership</h2>
-    {{DESIGN_HTML}}
+    <details open><summary>Show interface and ownership</summary>{{DESIGN_HTML}}</details>
   </section>
   <section id="classes" aria-labelledby="classes-title">
     <h2 id="classes-title">5. Class diagrams</h2>
     {{CLASS_NOTES_HTML}}
-    <figure><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
-    <figure><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
+    <div class="diagram-pair">
+      <figure class="diagram-card"><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
+      <figure class="diagram-card"><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
+    </div>
+    <div class="legend"><span>Existing</span><span class="proposed">Proposed</span><span class="removed">Removed or risky</span></div>
   </section>
   <section id="sequence" aria-labelledby="sequence-title">
     <h2 id="sequence-title">6. Current and proposed sequence</h2>
     {{SEQUENCE_NOTES_HTML}}
-    <figure><figcaption>Current workflow</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_SEQUENCE_MERMAID}}</pre></div></figure>
-    <figure><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_SEQUENCE_MERMAID}}</pre></div></figure>
+    <div class="diagram-pair">
+      <figure class="diagram-card"><figcaption>Current workflow</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_SEQUENCE_MERMAID}}</pre></div></figure>
+      <figure class="diagram-card"><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_SEQUENCE_MERMAID}}</pre></div></figure>
+    </div>
   </section>
   <section id="validation" aria-labelledby="validation-title">
     <h2 id="validation-title">7. Tests and acceptance criteria</h2>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Scenario</th><th scope="col">Observable assertion</th><th scope="col">Test level</th><th scope="col">Status / evidence</th></tr></thead>
-      <tbody>{{TEST_ROWS_HTML}}</tbody>
-    </table></div>
-    {{VALIDATION_NOTES_HTML}}
+    <details><summary>Show validation plan</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Scenario</th><th scope="col">Observable assertion</th><th scope="col">Test level</th><th scope="col">Status / evidence</th></tr></thead>
+        <tbody>{{TEST_ROWS_HTML}}</tbody>
+      </table></div>
+      {{VALIDATION_NOTES_HTML}}
+    </details>
   </section>
   <section id="scope" aria-labelledby="scope-title">
     <h2 id="scope-title">8. PR scope and tradeoffs</h2>
     <p><strong>Suggested PR title:</strong> {{PR_TITLE}}</p>
-    {{SCOPE_HTML}}
+    <details><summary>Show scope and tradeoffs</summary>{{SCOPE_HTML}}</details>
   </section>
   <p id="diagram-status" role="status" hidden></p>
   <noscript><p>Enable JavaScript to render diagrams. Their Mermaid source is shown above.</p></noscript>

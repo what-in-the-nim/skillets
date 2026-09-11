@@ -43,6 +43,8 @@ python skills/quick-refactor/scripts/render_proposal.py proposal.json --output <
 
 The renderer loads referenced Mermaid files relative to `proposal.json`, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
 
+Keep the report glanceable: lead with the recommendation, then paired current/proposed diagrams, then changes. Put supporting evidence, validation, and tradeoffs in the template's expandable details.
+
 Done when the HTML has all eight sections, valid navigation and IDs, four rendered diagrams, escaped content, and no unresolved tokens.
 
 ## Prove
