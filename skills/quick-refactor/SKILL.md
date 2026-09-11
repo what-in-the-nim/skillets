@@ -31,7 +31,9 @@ Show what moves: methods, state, duplicates, interface, caller duties, ordering,
 
 ## Render
 
-Create one-string-per-token JSON for [templates/proposal.html](templates/proposal.html). `_HTML` tokens are trusted fragments; all others are text. Fill every fixed section and keep the template unchanged.
+Create one-string-per-token JSON for [templates/proposal.html](templates/proposal.html). `_HTML` tokens are trusted fragments; all others are text. For each Mermaid token, use `@relative/path.mmd` so diagrams stay out of JSON. Keep the template unchanged.
+
+Write separate `.mmd` files for current/proposed structure and current/proposed workflow. Use valid `classDiagram` for structure and `sequenceDiagram` for both workflows.
 
 Run from the project root:
 
@@ -39,9 +41,9 @@ Run from the project root:
 python skills/quick-refactor/scripts/render_proposal.py proposal.json --output <report-path>
 ```
 
-The renderer loads the template, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Use `classDiagram` for current/proposed structure and `sequenceDiagram` for the workflow; include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
+The renderer loads referenced Mermaid files relative to `proposal.json`, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
 
-Done when the HTML has all eight sections, valid navigation and IDs, rendered diagrams, escaped content, and no unresolved tokens.
+Done when the HTML has all eight sections, valid navigation and IDs, four rendered diagrams, escaped content, and no unresolved tokens.
 
 ## Prove
 

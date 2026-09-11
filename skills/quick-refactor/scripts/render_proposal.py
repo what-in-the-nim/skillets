@@ -12,6 +12,12 @@ from typing import Any
 
 
 TOKEN_PATTERN = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
+MERMAID_TOKENS = {
+    "CURRENT_CLASS_MERMAID",
+    "PROPOSED_CLASS_MERMAID",
+    "CURRENT_SEQUENCE_MERMAID",
+    "PROPOSED_SEQUENCE_MERMAID",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,8 +36,8 @@ def load_data(path: Path) -> dict[str, Any]:
     return data
 
 
-def render(template: str, data: dict[str, Any]) -> str:
-    """Substitute every template token exactly once with validated values."""
+def render(template: str, data: dict[str, Any], data_dir: Path) -> str:
+    """Substitute every template token once, loading referenced diagrams."""
     tokens = set(TOKEN_PATTERN.findall(template))
     missing = tokens - data.keys()
     extra = data.keys() - tokens
@@ -49,6 +55,8 @@ def render(template: str, data: dict[str, Any]) -> str:
         value = data[token]
         if not isinstance(value, str):
             raise ValueError(f"value for {token} must be a string")
+        if token in MERMAID_TOKENS and value.startswith("@"):
+            value = (data_dir / value[1:]).read_text(encoding="utf-8")
         return value if token.endswith("_HTML") else html.escape(value)
 
     return TOKEN_PATTERN.sub(replace, template)
@@ -70,7 +78,9 @@ def main() -> None:
         raise ValueError("TITLE must be a string")
     output = args.output or Path(f"quick-refactor-{slugify(title)}.html")
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render(template_path.read_text(encoding="utf-8"), data), encoding="utf-8")
+    output.write_text(
+        render(template_path.read_text(encoding="utf-8"), data, args.data.parent), encoding="utf-8"
+    )
     print(output)
 
 
