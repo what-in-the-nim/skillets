@@ -41,9 +41,9 @@ Run from the project root:
 python skills/quick-refactor/scripts/render_proposal.py proposal.json --output <report-path>
 ```
 
-The renderer loads referenced Mermaid files relative to `proposal.json`, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
+Add `--check-mermaid` when `mmdc` is installed; it validates all four diagrams and reports when the tool is unavailable. The renderer loads referenced Mermaid files relative to `proposal.json`, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
 
-Keep the report glanceable: lead with the recommendation, then paired current/proposed diagrams, then changes. Put supporting evidence, validation, and tradeoffs in the template's expandable details.
+Keep the report glanceable: lead with the recommendation, then paired current/proposed diagrams, then changes. Put supporting evidence, validation, and tradeoffs in the template's collapsed details. Mermaid color meanings are author-defined; do not imply that the legend styles diagrams automatically.
 
 Done when the HTML has all eight sections, valid navigation and IDs, four rendered diagrams, escaped content, and no unresolved tokens.
 

@@ -17,15 +17,8 @@
     .meta, figcaption { color: #536176; font-size: .9rem; }
     nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 24px 0; }
     a { color: #2457a5; text-underline-offset: 3px; }
-    section { background: white; border: 1px solid #dce2ea; border-radius: 12px; padding: 24px; margin: 20px 0; scroll-margin-top: 16px; order: 10; }
-    #recommendation { order: 1; border-top: 4px solid #375d91; }
-    #classes { order: 2; }
-    #sequence { order: 3; }
-    #comparison { order: 4; }
-    #design { order: 5; }
-    #evidence { order: 6; }
-    #validation { order: 7; }
-    #scope { order: 8; }
+    section { background: white; border: 1px solid #dce2ea; border-radius: 12px; padding: 24px; margin: 20px 0; scroll-margin-top: 16px; }
+    #recommendation { border-top: 4px solid #375d91; }
     .diagram-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .diagram-card { min-width: 0; margin: 16px 0 0; }
     .diagram-card pre { margin: 0; }
@@ -33,6 +26,7 @@
     .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background: #9aa6b5; }
     .legend .proposed::before { background: #4b8b68; }
     .legend .removed::before { background: #b45b68; }
+    .legend .legend-note::before { display: none; }
     details { margin-top: 8px; }
     summary { cursor: pointer; color: #2457a5; font-weight: 600; }
     .table-wrap, .diagram { overflow-x: auto; }
@@ -47,7 +41,6 @@
     .mermaid { background: white; }
     .diagram svg { height: auto; }
     #diagram-status { color: #8a3419; }
-    #diagram-status, noscript { order: 20; }
     @media (max-width: 700px) { .diagram-pair { grid-template-columns: 1fr; } }
     @media (max-width: 600px) { main { padding: 24px 12px; } section { padding: 16px; } }
     @media print { body { background: white; } main { max-width: none; padding: 0; } nav { display: none; } section { border: 0; padding: 12px 0; } figure, tr { break-inside: avoid; } }
@@ -71,37 +64,37 @@
     <h2 id="recommendation-title">1. Recommendation</h2>
     {{RECOMMENDATION_HTML}}
   </section>
-  <section id="evidence" aria-labelledby="evidence-title">
-    <h2 id="evidence-title">2. Current behavior and evidence</h2>
-    <details><summary>Show evidence</summary>{{EVIDENCE_HTML}}</details>
+  <section id="classes" aria-labelledby="classes-title">
+    <h2 id="classes-title">2. Class diagrams</h2>
+    {{CLASS_NOTES_HTML}}
+    <div class="diagram-pair">
+      <figure class="diagram-card"><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
+      <figure class="diagram-card"><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
+    </div>
+    <div class="legend"><span>Existing</span><span class="proposed">Proposed</span><span class="removed">Removed or risky</span><span class="legend-note">Diagram colors are author-defined</span></div>
+  </section>
+  <section id="sequence" aria-labelledby="sequence-title">
+    <h2 id="sequence-title">3. Current and proposed sequence</h2>
+    {{SEQUENCE_NOTES_HTML}}
+    <div class="diagram-pair">
+      <figure class="diagram-card"><figcaption>Current workflow</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_SEQUENCE_MERMAID}}</pre></div></figure>
+      <figure class="diagram-card"><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_SEQUENCE_MERMAID}}</pre></div></figure>
+    </div>
   </section>
   <section id="comparison" aria-labelledby="comparison-title">
-    <h2 id="comparison-title">3. Before and after</h2>
+    <h2 id="comparison-title">4. Before and after</h2>
     <div class="table-wrap"><table>
       <thead><tr><th scope="col">Concern</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Benefit</th></tr></thead>
       <tbody>{{COMPARISON_ROWS_HTML}}</tbody>
     </table></div>
   </section>
   <section id="design" aria-labelledby="design-title">
-    <h2 id="design-title">4. Proposed interface and ownership</h2>
-    <details open><summary>Show interface and ownership</summary>{{DESIGN_HTML}}</details>
+    <h2 id="design-title">5. Proposed interface and ownership</h2>
+    <details><summary>Show interface and ownership</summary>{{DESIGN_HTML}}</details>
   </section>
-  <section id="classes" aria-labelledby="classes-title">
-    <h2 id="classes-title">5. Class diagrams</h2>
-    {{CLASS_NOTES_HTML}}
-    <div class="diagram-pair">
-      <figure class="diagram-card"><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
-      <figure class="diagram-card"><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
-    </div>
-    <div class="legend"><span>Existing</span><span class="proposed">Proposed</span><span class="removed">Removed or risky</span></div>
-  </section>
-  <section id="sequence" aria-labelledby="sequence-title">
-    <h2 id="sequence-title">6. Current and proposed sequence</h2>
-    {{SEQUENCE_NOTES_HTML}}
-    <div class="diagram-pair">
-      <figure class="diagram-card"><figcaption>Current workflow</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_SEQUENCE_MERMAID}}</pre></div></figure>
-      <figure class="diagram-card"><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_SEQUENCE_MERMAID}}</pre></div></figure>
-    </div>
+  <section id="evidence" aria-labelledby="evidence-title">
+    <h2 id="evidence-title">6. Current behavior and evidence</h2>
+    <details><summary>Show evidence</summary>{{EVIDENCE_HTML}}</details>
   </section>
   <section id="validation" aria-labelledby="validation-title">
     <h2 id="validation-title">7. Tests and acceptance criteria</h2>
