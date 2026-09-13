@@ -1,11 +1,11 @@
 ---
 name: quick-refactor
-description: Propose a small refactor PR that improves encapsulation, abstraction, and testability, delivered as an HTML report with fixed sections and Mermaid diagrams. Use when the user asks for a quick refactor opportunity or a before-and-after refactor proposal.
+description: Propose a small refactor PR that improves encapsulation, abstraction, and testability, delivered as a validated offline HTML report with before/after diagrams. Use when the user asks for a quick refactor opportunity or a before-and-after refactor proposal.
 ---
 
 # Quick Refactor
 
-Find one cohesive responsibility whose ownership and tests can improve in a small PR. Preserve behavior and public contracts.
+Find one cohesive responsibility whose ownership and tests can improve. Show the requested target design and the smallest useful first PR separately. Preserve behavior and public contracts within the refactor.
 
 ## Trace
 
@@ -14,13 +14,13 @@ Find one cohesive responsibility whose ownership and tests can improve in a smal
 - Trace state, dependencies, side effects, and lifecycle. For async resources, identify who creates, awaits, cancels, and closes them.
 - Note oversized test graphs and private-field assertions.
 
-Done when exact source locations support the candidate's behavior, dependencies, lifecycle, and tests.
+Stop tracing when source evidence for ownership, lifecycle, callers, and tests is sufficient to assess the proposal. Run focused tests or probes only when they resolve a concrete uncertainty.
 
 ## Bound
 
 - Prefer an existing owner; add a class only for state, invariants, or lifecycle. Use functions for stateless work.
 - Give the new owner a narrow interface and dependencies, not the whole worker or callback bag.
-- Compare at most two options; recommend the smallest useful one, or say none exists.
+- Compare at most two options. Show the requested end state clearly, then identify the smallest independently useful first PR, its acceptance criteria, and deferred work; say when no useful refactor exists.
 - Keep policy with its domain owner. Separate bug fixes and behavior changes from the refactor.
 
 Done when responsibility, dependencies, files, and tests are bounded.
@@ -31,23 +31,23 @@ Show what moves: methods, state, duplicates, interface, caller duties, ordering,
 
 ## Render
 
-Create one-string-per-token JSON for [templates/proposal.html](templates/proposal.html). `_HTML` tokens are trusted fragments; all others are text. For each Mermaid token, use `@relative/path.mmd` so diagrams stay out of JSON. Keep the template unchanged.
+Use one content JSON file plus referenced `.mmd` files as the report's source of truth. Start from [examples/proposal.json](examples/proposal.json); consult [the renderer reference](scripts/README.md) for the schema and runtime requirements. Put follow-up edits and optional sections in those sources, then rerender.
 
-Write separate `.mmd` files for current/proposed structure and current/proposed workflow. Use valid `classDiagram` for structure and `sequenceDiagram` for both workflows.
+Lead with the recommendation and paired before/after flowcharts of the overall process. Add class diagrams when they explain ownership and sequence diagrams when they explain timing, ordering, failures, or cancellation. Choose diagrams by the question they answer, regardless of implementation style. All after views depict the target design; identify the first PR separately.
 
-Run from the project root:
+Label evidence as **reproduced behavior**, **source-supported risk**, or **proposed improvement**. Cite the reproduction or source location; keep illustrative examples distinct from confirmed runtime bugs. Distinguish executed validation from proposed checks.
+
+Resolve `SKILL_DIR` to the directory containing this skill's `SKILL.md`, then run from any working directory:
 
 ```sh
-python skills/quick-refactor/scripts/render_proposal.py proposal.json --output <report-path>
+python3 "$SKILL_DIR/scripts/render_proposal.py" proposal.json --output report.html
 ```
 
-Add `--check-mermaid` when `mmdc` is installed; it validates all four diagrams and reports when the tool is unavailable. The renderer loads referenced Mermaid files relative to `proposal.json`, escapes text and Mermaid, rejects missing or unknown tokens, and substitutes once. Lead with the recommendation and source evidence. Include failure, timeout, and cancellation paths. For function-only changes, use flowcharts and explain why.
+The renderer bundles pinned Mermaid, compiles offline to embedded SVGs, and validates the artifact before replacing it. It generates navigation and numbering from core and optional sections. Use neutral diagram styling by default; add a legend in the section's `body_html` only for semantic colors actually used in its diagrams.
 
-Keep the report glanceable: lead with the recommendation, then paired current/proposed diagrams, then changes. Put supporting evidence, validation, and tradeoffs in the template's collapsed details. Mermaid color meanings are author-defined; do not imply that the legend styles diagrams automatically.
+Keep the report glanceable: one idea per bullet, usually 3–7 bullets per group; tables for repeated comparisons. Collapse supporting evidence, validation, and tradeoffs. Keep the recommendation, overall process, target design, and first PR visible.
 
-Write content as bullets: one idea per `<li>`, usually 3–7 items per group. Keep paragraphs to one or two concise sentences; use tables for repeated comparisons and tests.
-
-Done when the HTML has all eight sections, valid navigation and IDs, four rendered diagrams, escaped content, and no unresolved tokens.
+Done when the single render command produces a validated offline report with required core sections, compiled diagram pairs, valid navigation and unique IDs, and no unresolved tokens.
 
 ## Prove
 

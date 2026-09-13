@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{TITLE}} — Quick Refactor</title>
   <style>
@@ -22,11 +23,6 @@
     .diagram-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .diagram-card { min-width: 0; margin: 16px 0 0; }
     .diagram-card pre { margin: 0; }
-    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: #536176; font-size: .85rem; margin-top: 12px; }
-    .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background: #9aa6b5; }
-    .legend .proposed::before { background: #4b8b68; }
-    .legend .removed::before { background: #b45b68; }
-    .legend .legend-note::before { display: none; }
     details { margin-top: 8px; }
     summary { cursor: pointer; color: #2457a5; font-weight: 600; }
     .content ul { margin: 8px 0; padding-left: 22px; }
@@ -43,7 +39,6 @@
     figcaption { margin-bottom: 8px; font-weight: 600; }
     .mermaid { background: white; }
     .diagram svg { height: auto; }
-    #diagram-status { color: #8a3419; }
     @media (max-width: 700px) { .diagram-pair { grid-template-columns: 1fr; } }
     @media (max-width: 600px) { main { padding: 24px 12px; } section { padding: 16px; } }
     @media print { body { background: white; } main { max-width: none; padding: 0; } nav { display: none; } section { border: 0; padding: 12px 0; } figure, tr { break-inside: avoid; } }
@@ -56,78 +51,8 @@
     <h1>{{TITLE}}</h1>
     <p class="meta">{{TARGET}} · {{REVISION}} · {{DATE}}</p>
   </header>
-  <nav aria-label="Proposal sections">
-    <a href="#recommendation">Summary</a><a href="#classes">Structure</a>
-    <a href="#sequence">Workflow</a><a href="#comparison">Changes</a>
-    <a href="#design">Design</a><a href="#evidence">Evidence</a>
-    <a href="#validation">Validation</a><a href="#scope">PR scope</a>
-  </nav>
-
-  <section id="recommendation" aria-labelledby="recommendation-title">
-    <h2 id="recommendation-title">1. Recommendation</h2>
-    <div class="content">{{RECOMMENDATION_HTML}}</div>
-  </section>
-  <section id="classes" aria-labelledby="classes-title">
-    <h2 id="classes-title">2. Class diagrams</h2>
-    <div class="content">{{CLASS_NOTES_HTML}}</div>
-    <div class="diagram-pair">
-      <figure class="diagram-card"><figcaption>Current structure</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_CLASS_MERMAID}}</pre></div></figure>
-      <figure class="diagram-card"><figcaption>Proposed structure</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_CLASS_MERMAID}}</pre></div></figure>
-    </div>
-    <div class="legend"><span>Existing</span><span class="proposed">Proposed</span><span class="removed">Removed or risky</span><span class="legend-note">Diagram colors are author-defined</span></div>
-  </section>
-  <section id="sequence" aria-labelledby="sequence-title">
-    <h2 id="sequence-title">3. Current and proposed sequence</h2>
-    <div class="content">{{SEQUENCE_NOTES_HTML}}</div>
-    <div class="diagram-pair">
-      <figure class="diagram-card"><figcaption>Current workflow</figcaption><div class="diagram"><pre class="mermaid">{{CURRENT_SEQUENCE_MERMAID}}</pre></div></figure>
-      <figure class="diagram-card"><figcaption>Proposed workflow</figcaption><div class="diagram"><pre class="mermaid">{{PROPOSED_SEQUENCE_MERMAID}}</pre></div></figure>
-    </div>
-  </section>
-  <section id="comparison" aria-labelledby="comparison-title">
-    <h2 id="comparison-title">4. Before and after</h2>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Concern</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Benefit</th></tr></thead>
-      <tbody>{{COMPARISON_ROWS_HTML}}</tbody>
-    </table></div>
-  </section>
-  <section id="design" aria-labelledby="design-title">
-    <h2 id="design-title">5. Proposed interface and ownership</h2>
-    <details><summary>Show interface and ownership</summary><div class="content">{{DESIGN_HTML}}</div></details>
-  </section>
-  <section id="evidence" aria-labelledby="evidence-title">
-    <h2 id="evidence-title">6. Current behavior and evidence</h2>
-    <details><summary>Show evidence</summary><div class="content">{{EVIDENCE_HTML}}</div></details>
-  </section>
-  <section id="validation" aria-labelledby="validation-title">
-    <h2 id="validation-title">7. Tests and acceptance criteria</h2>
-    <details><summary>Show validation plan</summary>
-      <div class="table-wrap"><table>
-        <thead><tr><th scope="col">Scenario</th><th scope="col">Observable assertion</th><th scope="col">Test level</th><th scope="col">Status / evidence</th></tr></thead>
-        <tbody>{{TEST_ROWS_HTML}}</tbody>
-      </table></div>
-      <div class="content">{{VALIDATION_NOTES_HTML}}</div>
-    </details>
-  </section>
-  <section id="scope" aria-labelledby="scope-title">
-    <h2 id="scope-title">8. PR scope and tradeoffs</h2>
-    <p><strong>Suggested PR title:</strong> {{PR_TITLE}}</p>
-    <details><summary>Show scope and tradeoffs</summary><div class="content">{{SCOPE_HTML}}</div></details>
-  </section>
-  <p id="diagram-status" role="status" hidden></p>
-  <noscript><p>Enable JavaScript to render diagrams. Their Mermaid source is shown above.</p></noscript>
+  <nav aria-label="Proposal sections">{{NAV_HTML}}</nav>
+  {{SECTIONS_HTML}}
 </main>
-<script type="module">
-  try {
-    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs');
-    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' });
-    await mermaid.run({ querySelector: '.mermaid' });
-  } catch (error) {
-    const status = document.getElementById('diagram-status');
-    status.hidden = false;
-    status.textContent = 'Diagrams could not render. Check network access and Mermaid syntax.';
-    console.error(error);
-  }
-</script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "title": "Example: move retry policy to its owner",
+  "target": "Illustrative worker",
+  "revision": "Example only",
+  "date": "2026-09-13",
+  "sections": [
+    {"id": "recommendation", "title": "Recommendation", "body_html": "<ul><li>Give retry decisions one owner.</li><li>This example demonstrates a proposal, not a confirmed runtime bug.</li></ul>"},
+    {"id": "process", "title": "Overall process", "diagrams": {"before": "@before.mmd", "after": "@after.mmd"}},
+    {"id": "ownership", "title": "Ownership", "diagrams": {"before": "@before-class.mmd", "after": "@after-class.mmd"}},
+    {"id": "timing", "title": "Ordering", "diagrams": {"before": "@before-sequence.mmd", "after": "@after-sequence.mmd"}},
+    {"id": "target-design", "title": "Target design", "body_html": "<ul><li>Worker owns orchestration and resource teardown.</li><li>RetryPolicy owns attempt limits and retry decisions.</li><li>Target also consolidates the second caller; that migration follows the first PR.</li></ul>"},
+    {"id": "evidence", "title": "Evidence", "collapsed": true, "evidence": [{"strength": "proposed improvement", "text": "Isolated policy tests could reduce setup cost.", "source": "Illustrative design; verify real callers and tests before proposing this extraction."}]},
+    {"id": "validation", "title": "Validation", "collapsed": true, "body_html": "<ul><li>Proposed, not executed: assert retry decisions at the attempt limit.</li><li>Retain integration coverage for cancellation and worker teardown.</li></ul>"},
+    {"id": "first-pr", "title": "First PR", "body_html": "<ul><li>Extract retry decisions for one worker and add focused behavior tests.</li><li>Preserve attempt limits and failure propagation.</li><li>Defer the second caller migration; the first step is independently useful.</li></ul>"}
+  ]
+}

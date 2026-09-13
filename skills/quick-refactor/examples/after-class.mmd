@@ -1,0 +1,8 @@
+classDiagram
+    Worker --> RetryPolicy : asks
+    class Worker {
+      run()
+    }
+    class RetryPolicy {
+      should_retry()
+    }

@@ -1,0 +1,8 @@
+flowchart TD
+    Request --> Worker
+    Worker --> Attempt
+    Attempt --> Result{Succeeded?}
+    Result -->|Yes| Complete
+    Result -->|No| Decision[Worker decides retry]
+    Decision -->|Retry| Attempt
+    Decision -->|Limit reached| Failure
