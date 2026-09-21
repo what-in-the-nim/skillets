@@ -1,10 +1,10 @@
 ---
-name: code-guide
+name: code-qa
 description: Quick Q&A about code we vibed together.
 disable-model-invocation: true
 ---
 
-# Code Guide
+# Code QA
 
 Explain code created or changed in the current task.
 
