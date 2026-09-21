@@ -5,6 +5,7 @@ Personal, reusable skills for agentic coding.
 ## Skills
 
 - [`code-principle`](skills/code-principle/SKILL.md) — surgical coding defaults for formatting, documentation, composition, comments, and scope.
+- [`code-guide`](skills/code-guide/SKILL.md) — iterative, source-grounded explanations of code, diffs, PR changes, classes, modules, and packages.
 - [`code-qa`](skills/code-qa/SKILL.md) — concise, source-grounded guidance through code created or changed in the current task.
 - [`class-design`](skills/class-design/SKILL.md) — principles for cohesive, minimal, invariant-preserving, and lifecycle-safe classes.
 - [`testing-principle`](skills/testing-principle/SKILL.md) — pytest guidance for realistic collaborators, test organization, fixtures, parametrization, and assertions.
@@ -13,7 +14,7 @@ Personal, reusable skills for agentic coding.
 - [`review-pr`](skills/review-pr/SKILL.md) — Gitea pull-request review workflow using the `tea` CLI.
 - [`quick-refactor`](skills/quick-refactor/SKILL.md) — small refactor proposals with HTML reports and Mermaid diagrams.
 
-These are the canonical package names for the coding-principle, code-qa, class-design, testing-principle, pytest, quick-refactor, Gitea, and Gitea PR-review skills.
+These are the canonical package names for the coding-principle, code-guide, code-qa, class-design, testing-principle, pytest, quick-refactor, Gitea, and Gitea PR-review skills.
 
 ## Install
 
