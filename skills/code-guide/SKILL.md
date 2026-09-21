@@ -9,7 +9,7 @@ Use this method for a code walkthrough or design explanation.
 
 ## Method
 
-1. Inspect the current source, tests, configuration, and relevant diff. Done when the evidence set is known.
+1. Inspect the current source, tests, configuration, and relevant diff. Done when the relevant code paths are known.
 2. State the core idea in one to three short sentences. Done when a new reader can name the main job.
 3. Show the smallest useful public interface. Done when the main boundary is visible.
 4. Add one real edge case at a time. Update the model after each case. Done when each relevant branch has an explanation.
@@ -20,7 +20,7 @@ Each pass must contain:
 - **Rule:** one simple statement of the behavior.
 - **Interface:** a short code block that shows the boundary.
 - **Edge case:** the new case that changes the model.
-- **Evidence:** the file, symbol, test, or diff that supports the rule.
+- **Reader meaning:** what the reader can now expect and why the rule matters.
 
 Use an interface sketch when the code is complex. Use the project language when it helps. Use pseudocode when the language hides the idea.
 
@@ -40,6 +40,25 @@ class Store:
 ```
 
 In project code, use comments only for **WHY**. Do not use comments to restate **WHAT** the code does.
+
+## Reader view
+
+Write from the reader's point of view. Imagine that they see the code for the first time.
+
+Start each pass with the question the reader may have:
+
+- What does this do?
+- What happens next?
+- Why is this extra rule needed?
+- What can I rely on?
+
+Answer with direct sentences:
+
+- When you call this, it does that.
+- If this case occurs, the code does this.
+- This extra rule protects this behavior.
+
+Explain user-visible effects before internal names. Connect each new branch to its effect on input, output, state, errors, or timing.
 
 ## Choose the view
 
@@ -70,7 +89,7 @@ End with a compact final model:
 - Main flow.
 - Invariants.
 - Edge-case behavior.
-- Evidence and open unknowns.
+- What the reader can rely on and any open question.
 
 Keep iterating until this model matches the current source. Do not invent a cleaner design. Describe a proposed design separately from the current design.
 
