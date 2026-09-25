@@ -1,53 +1,27 @@
 ---
 name: review-pr
-description: Review a Gitea pull request with tea and post one review. Takes the PR number.
-allowed-tools: Bash, Read, Grep, Glob
+description: Review a Gitea PR or branch, track findings across re-reviews, and submit a PR review when authorized.
 disable-model-invocation: true
 ---
 
 # Review PR
 
-Use `gitea` for target resolution, authentication, command selection, and mutation verification. This skill owns Gitea review output and submission.
+Invoke as `review-pr 123`, `review-pr feature/login` (against `origin/dev`), or `review-pr feature/login against main`. Work from the target repository. Use `gitea` for PR lookup, discussion, submission, and readback.
 
-## 1. Read the PR
+## Prepare
 
-```bash
-N=743
-tea pulls "$N" --fields index,title,state,author,url,body,mergeable,base,head --output yaml
-tea pulls "$N" --fields diff --output simple
-```
+For a PR, use `gitea` to read its head SHA, base, and repository URL. Resolve its exact head ref and remote-tracking base. For a branch, use the named source and target. Run `python3 <skill-dir>/scripts/review_pr.py prepare --source REF [--target REF]`; add `--expected-head SHA --repo-url URL` for a PR. The script refreshes remote-tracking refs, defaults to `origin/dev`, verifies the head, and prints only a temporary bundle path.
 
-Read the body and full diff. Identify changed files and verify the change against its stated intent.
+Save the PR title/body, full diff, and discussion including inline comments to bundle files through `gitea`, without printing bulk output. Read `manifest.json` and `files.txt`; reconcile their file list with Gitea's PR files. Pass bundle and repository paths, not copied diff text, to one reviewer subagent. It reads Gitea's diff for a PR or `diff.patch` for a branch, every changed file at the recorded source SHA (target SHA for deletions), listed docs, and any prior review.
 
-## 2. Trace the surrounding code
+## Review
 
-Before forming findings, inspect:
+Have the subagent trace callers, removed behavior, failure paths, and documented contracts. Require a coverage list for every changed file, including tests, config, and migrations. Check it against `files.txt`; send omissions back. Run relevant tests when feasible. Verify each proposed finding against current code and a concrete consequence; discard unsupported claims. Label findings, in severity order: 🔴 Blocker, 🟠 Medium risk, 🟡 Low risk, 🔵 Nit. Use the same labels in the local file and published body. On re-review, match prior findings by problem and mark `NEW`, `STILL OPEN`, or `FIXED` with evidence.
 
-- **Consumers.** Search callers of changed public methods. Missing local callers require checking the spec, exports, documentation, and external compatibility promises. Flag speculative generality only with evidence of no supported requirement.
-- **Removed behavior.** Compare replacements with removed helpers, preserving cleanup, tracing, and error handling. Look for dropped metrics and resource leaks.
-- **Failure paths.** Trace `finally`, exceptions, cancellation, and partial work. Check whether caching or finalization can occur on failure.
-- **Substitutability.** Investigate type-sniffing such as `isinstance` or `inspect.isawaitable` on shared methods for LSP/OCP violations.
+Write `manifest.json`'s `review_file`: title and reviewed SHA/date; a summary with test results and limits; `## Findings` with `path:line`, severity, consequence, and fix (or `No findings.`); and one current `## Out of scope / notes`. On re-review, replace findings and prepend a `## Changes since last review` table of status transitions; keep older change sections.
 
-## 3. Form the review
+## Publish
 
-Favor surgical, SOLID, extensible changes. Each finding needs `file:line` and a concrete consequence rather than a style preference.
+For a PR, choose `REQUEST_CHANGES`, `APPROVE`, or `COMMENT`. Draft the body using [the request-changes template](templates/request-changes.md) when appropriate. Put `{{code:path:L10-L15}}` on its own line after each current-code finding, or `{{base-code:path:L10-L15}}` for removed code. Run `python3 <skill-dir>/scripts/review_pr.py format --bundle DIR --draft FILE`; it validates ranges and writes bare Gitea commit permalinks to `body.md` for rendered code previews. Review the resulting body and test evidence.
 
-Default to severity order: Blocking, Should fix, Minor/nits, then a short What's good section. When the user explicitly requests `code-review`'s two-axis format, preserve Standards and Spec sections without globally reranking them.
-
-Choose `REQUEST_CHANGES`, `APPROVE`, or `COMMENT`.
-
-## 4. Show, submit, verify
-
-Present the review in chat. Post within existing explicit authorization; otherwise ask before posting. Save the body to a scratch Markdown file, then execute exactly one matching command:
-
-```bash
-BODY_FILE=/tmp/review.md
-tea pulls reject "$N" "$(cat "$BODY_FILE")"   # REQUEST_CHANGES
-tea pulls approve "$N" "$(cat "$BODY_FILE")"  # APPROVE
-tea api --method POST "repos/{owner}/{repo}/pulls/$N/reviews" \
-  -f event=COMMENT -F "body=@$BODY_FILE"       # COMMENT
-```
-
-COMMENT creates a [pull-request review](https://docs.gitea.com/api/operations/repo-create-pull-review/), not an issue comment. Submit one review, adding inline comments only when requested. Verify its state and body, then report the verdict and PR URL.
-
-On failure, follow `gitea`'s target-resolution and authentication guidance before retrying.
+Show the complete review to the user. Re-read the PR head and base through `gitea`, then run `python3 <skill-dir>/scripts/review_pr.py preflight --bundle DIR --current-pr-head SHA --current-pr-base BRANCH`. If refs changed, review again. Submit one review through `gitea` within existing authorization; otherwise present the complete draft for approval. Read back the verdict, body, and rendered previews. Report the local file, PR URL, and result. A branch without a PR produces only the local review.

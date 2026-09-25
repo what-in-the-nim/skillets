@@ -22,7 +22,7 @@ Prefer entity commands (`tea pulls`, `tea issues`, etc.). Use `tea api` when the
 
 Use YAML or JSON output for downstream processing. Quote API endpoints containing `?` or `&`.
 
-For reviews, fetch the full diff with `tea pulls "$N" --fields diff --output simple`. Use dedicated approve/reject commands for non-interactive verdicts; `tea pulls review` requires interaction. A normal `tea comments add` comment is distinct from a pull-request review. Review submission examples live in [review-pr](../review-pr/SKILL.md).
+For reviews, fetch the full diff with `tea pulls "$N" --fields diff --output simple`. Use dedicated approve/reject commands for non-interactive verdicts; `tea pulls review` requires interaction. A normal `tea comments add` comment is distinct from a pull-request review. The review workflow lives in [review-pr](../review-pr/SKILL.md).
 
 ## Read, change, verify
 
