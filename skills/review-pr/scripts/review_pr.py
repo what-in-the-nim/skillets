@@ -52,6 +52,11 @@ def prepare(args):
     os.chdir(root)
     if args.expected_head and not args.repo_url:
         raise ValueError("--repo-url is required with --expected-head")
+    if args.expected_head:
+        remotes = git("remote").decode().splitlines()
+        for label, ref in (("source", args.source), ("target", args.target)):
+            if not any(ref.startswith(f"{remote}/") for remote in remotes):
+                raise ValueError(f"PR {label} must be a remote-tracking ref such as origin/{ref}")
     refresh(args.target)
     refresh(args.source)
     source_sha, target_sha = ref_sha(args.source), ref_sha(args.target)
@@ -74,6 +79,37 @@ def prepare(args):
     }
     (bundle / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(bundle)
+
+
+def intake(args):
+    """Summarize saved Gitea responses and verify changed-file coverage."""
+    bundle, manifest = load_bundle(args.bundle)
+
+    def read_json(name):
+        """Read one saved Gitea response from the prepared bundle."""
+        return json.loads((bundle / name).read_text())
+
+    pr = read_json("pr.json")
+    files = read_json("gitea-files.json")
+    reviews = read_json("reviews.json")
+    discussion = read_json("discussion.json")
+    inline = read_json("inline.json")
+    if pr["head"]["sha"] != manifest["source_sha"] or pr["base"]["ref"] != manifest["target"].split("/", 1)[-1]:
+        raise ValueError("Gitea PR refs differ from the prepared bundle; review the current PR")
+    if not all(isinstance(items, list) for items in (files, reviews, discussion, inline)):
+        raise ValueError("Gitea files, reviews, and comments responses must be lists")
+    api_files = {item["filename"] for item in files}
+    prepared_files = set(manifest["changed_files"])
+    if api_files != prepared_files:
+        raise ValueError(f"Gitea file list differs from prepared diff: missing={sorted(prepared_files - api_files)}, extra={sorted(api_files - prepared_files)}")
+    if not (bundle / "gitea.diff").read_bytes():
+        raise ValueError("Gitea PR diff is empty")
+    print(json.dumps({
+        "title": pr["title"], "head": pr["head"]["sha"], "base": pr["base"]["ref"],
+        "changed_files": manifest["changed_files"],
+        "review_ids": [item["id"] for item in reviews],
+        "discussion_comments": len(discussion), "inline_comments": len(inline),
+    }))
 
 
 def format_body(args):
@@ -143,6 +179,9 @@ def main():
     prep.add_argument("--expected-head")
     prep.add_argument("--repo-url")
     prep.set_defaults(action=prepare)
+    summary = commands.add_parser("intake")
+    summary.add_argument("--bundle", required=True)
+    summary.set_defaults(action=intake)
     fmt = commands.add_parser("format")
     fmt.add_argument("--bundle", required=True)
     fmt.add_argument("--draft", required=True)

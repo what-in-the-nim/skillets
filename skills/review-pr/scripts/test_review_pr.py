@@ -1,6 +1,7 @@
 """Exercise the review bundle, permalink formatter, and stale-ref gate."""
 
 from pathlib import Path
+import json
 import shutil
 import subprocess
 import sys
@@ -43,14 +44,35 @@ class ReviewPrTest(unittest.TestCase):
             (work / "app.py").write_text("first\nsecond\n")
             run("git", "commit", "-am", "change", cwd=work)
             head, _ = run("git", "rev-parse", "HEAD", cwd=work)
+            run("git", "push", "-u", "origin", "feature", cwd=work)
 
-            bundle_text, _ = run(sys.executable, str(SCRIPT), "prepare", "--source", "feature",
+            _, error = run(sys.executable, str(SCRIPT), "prepare", "--source", "feature",
+                           "--expected-head", head, "--repo-url", "https://git.example/o/r", cwd=work, ok=False)
+            self.assertIn("remote-tracking ref", error)
+            bundle_text, _ = run(sys.executable, str(SCRIPT), "prepare", "--source", "origin/feature",
                                  "--expected-head", head, "--repo-url", "https://git.example/o/r", cwd=work)
             bundle = Path(bundle_text)
             self.addCleanup(shutil.rmtree, bundle, True)
             self.assertEqual(len(bundle_text.splitlines()), 1)
             self.assertIn("app.py", (bundle / "files.txt").read_text())
             self.assertIn("+second", (bundle / "diff.patch").read_text())
+            for name, value in {
+                "pr.json": {"title": "Change", "head": {"sha": head}, "base": {"ref": "dev"}},
+                "gitea-files.json": [{"filename": "app.py"}],
+                "reviews.json": [{"id": 12}],
+                "discussion.json": [{}],
+                "inline.json": [],
+            }.items():
+                (bundle / name).write_text(json.dumps(value))
+            (bundle / "gitea.diff").write_bytes((bundle / "diff.patch").read_bytes())
+            summary_text, _ = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work)
+            summary = json.loads(summary_text)
+            self.assertEqual(summary["changed_files"], ["app.py"])
+            self.assertEqual(summary["review_ids"], [12])
+            self.assertEqual(summary["discussion_comments"], 1)
+            (bundle / "gitea-files.json").write_text("[]")
+            _, error = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work, ok=False)
+            self.assertIn("file list differs", error)
             run("git", "remote", "add", "upstream", str(remote), cwd=work)
             other_text, _ = run(sys.executable, str(SCRIPT), "prepare", "--source", "feature",
                                 "--target", "upstream/dev", cwd=work)
