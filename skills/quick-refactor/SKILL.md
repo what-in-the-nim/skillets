@@ -1,59 +1,37 @@
 ---
 name: quick-refactor
-description: Propose a small refactor PR that improves encapsulation, abstraction, and testability, delivered as a validated offline HTML report with before/after diagrams. Use when the user asks for a quick refactor opportunity or a before-and-after refactor proposal.
+description: Find one high-value behavior-preserving refactor, bound its first change, and explain the improvement with a before/after diagram in a concise Markdown proposal. Use when the user asks for a quick refactor opportunity or proposal.
 ---
 
 # Quick Refactor
 
-Find one cohesive responsibility whose ownership and tests can improve. Show the requested target design and the smallest useful first PR separately. Preserve behavior and public contracts within the refactor.
+Propose one refactor that reduces concrete complexity while preserving behavior and public contracts. Identify the smallest useful first PR. Say when no strong candidate emerges.
 
-## Trace
+## Find — 40%
 
-- Read repo instructions and status; preserve unrelated work.
-- Inspect the target, constructor, callers, wiring, collaborators, and tests. Verify the current code.
-- Trace state, dependencies, side effects, and lifecycle. For async resources, identify who creates, awaits, cancels, and closes them.
-- Note oversized test graphs and private-field assertions.
+- Read repository guidance and status; preserve unrelated work. Treat a user-named module as the starting scope.
+- If no target is named, make a lightweight scan and shortlist at most three candidates. Prefer concrete friction: split ownership, duplicated decisions, scattered state, or tests that require broad setup for a small behavior.
+- Choose one candidate. Inspect its responsible code, direct callers, and relevant tests. Expand one hop only when needed to settle ownership or a contract. Trace lifecycle, ordering, failure, or cancellation only when the candidate depends on it.
+- Stop when source evidence establishes the current owner, the specific friction, the invariant to preserve, and the first-PR boundary. Run a focused test or probe only to resolve a concrete uncertainty.
 
-Stop tracing when source evidence for ownership, lifecycle, callers, and tests is sufficient to assess the proposal. Run focused tests or probes only when they resolve a concrete uncertainty.
+## Design — 40%
 
-## Bound
+- State what responsibility moves, its destination owner and narrow interface, and how this reduces coupling, decisions, state, or test setup.
+- Define the first PR by affected files, caller changes, preserved behavior, and focused acceptance checks. Separate deferred parts of the target design when they matter.
+- Prefer an existing owner; add a class when state, invariants, or lifecycle need one. Use a function for stateless work. Keep policy with its domain owner.
+- Compare one alternative only when it has a real tradeoff. Keep bug fixes and behavior changes separate from the refactor.
 
-- Prefer an existing owner; add a class only for state, invariants, or lifecycle. Use functions for stateless work.
-- Give the new owner a narrow interface and dependencies, not the whole worker or callback bag.
-- Compare at most two options. Show the requested end state clearly, then identify the smallest independently useful first PR, its acceptance criteria, and deferred work; say when no useful refactor exists.
-- Keep policy with its domain owner. Separate bug fixes and behavior changes from the refactor.
+## Show — 20%
 
-Done when responsibility, dependencies, files, and tests are bounded.
+- Make one paired before/after flowchart the primary visual. Show the responsibility or decision moving, the simpler handoff, and the behavior or invariant that stays intact.
+- Add a second diagram only when it answers a separate important question, such as a lifecycle or ordering risk. Avoid diagrams that only document every class or call.
+- Label evidence as **reproduced behavior**, **source-supported risk**, or **proposed improvement**. Cite source locations or the command and result; distinguish executed checks from proposed checks.
+- Keep the proposal concise: up to three bullets per section. Include the recommendation, primary diagram pair, target design, evidence/validation, and first PR.
 
-## Own
+## Deliver
 
-Show what moves: methods, state, duplicates, interface, caller duties, ordering, resources, failures, cancellation, and reusable teardown guarantees. Every affected behavior and state must have one owner; the interface must be testable without the original large object.
+Start from [the Markdown example](examples/proposal.md). Save one Markdown proposal at the user-requested path or beside the relevant design documentation. Embed diagrams as fenced `mermaid` blocks in that file; do not create separate JSON or diagram-source files.
 
-## Render
+Keep all rendering in the viewing platform. The skill must not launch a browser, call the HTML renderer, or preview the report in a browser.
 
-Use one content JSON file plus referenced `.mmd` files as the report's source of truth. Start from [examples/proposal.json](examples/proposal.json); consult [the renderer reference](scripts/README.md) for the schema and runtime requirements. Put follow-up edits and optional sections in those sources, then rerender.
-
-Lead with the recommendation and paired before/after flowcharts of the overall process. Add class diagrams when they explain ownership and sequence diagrams when they explain timing, ordering, failures, or cancellation. Choose diagrams by the question they answer, regardless of implementation style. All after views depict the target design; identify the first PR separately.
-
-Label evidence as **reproduced behavior**, **source-supported risk**, or **proposed improvement**. Cite the reproduction or source location; keep illustrative examples distinct from confirmed runtime bugs. Distinguish executed validation from proposed checks.
-
-Resolve `SKILL_DIR` to the directory containing this skill's `SKILL.md`, then run from any working directory:
-
-```sh
-python3 "$SKILL_DIR/scripts/render_proposal.py" proposal.json --output report.html
-```
-
-The renderer bundles pinned Mermaid, compiles offline to embedded SVGs, and validates the artifact before replacing it. It generates navigation and numbering from core and optional sections. Use neutral diagram styling by default; add a legend in the section's `body_html` only for semantic colors actually used in its diagrams.
-
-Keep the report glanceable: one idea per bullet, usually 3–7 bullets per group; tables for repeated comparisons. Collapse supporting evidence, validation, and tradeoffs. Keep the recommendation, overall process, target design, and first PR visible.
-
-Done when the single render command produces a validated offline report with required core sections, compiled diagram pairs, valid navigation and unique IDs, and no unresolved tokens.
-
-## Prove
-
-- Propose focused interface tests asserting results or collaborator effects; retain integration tests for ordering, persistence, and teardown.
-- Cover meaningful success, failure, timeout, rejection, skip, and cancellation paths. Distinguish proposed checks from executed checks.
-- Implement only when authorized. Commit, push, or open a PR only when requested.
-- Preview the HTML when possible; inspect overflow, diagrams, and readability. Report preview limits honestly.
-
-Deliver the HTML link, a short recommendation, and validation status. Do not duplicate the report in chat.
+Implement only when authorized; commit, push, or open a PR only when requested. Deliver the Markdown link, a short recommendation, and whether checks were executed, without duplicating the report in chat.
