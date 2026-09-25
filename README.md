@@ -26,7 +26,13 @@ Install all skills globally for Codex:
 npx skills add what-in-the-nim/skillets -g
 ```
 
-Use `--list` to inspect the available skills before installing, or omit `-g` to install them only in the current project.
+Install one skill by naming it with `--skill`:
+
+```sh
+npx skills add what-in-the-nim/skillets --skill code-qa -g
+```
+
+Use `--list` to inspect the available skills before installing. Omit `-g` to install all skills or the selected skill only in the current project.
 
 ### From a local clone
 
