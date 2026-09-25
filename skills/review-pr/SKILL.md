@@ -27,16 +27,17 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
     Add `--expected-head SHA --repo-url URL` for a PR.
   - The script fetches remote-tracking refs, defaults to `origin/dev`, verifies the head,
     and prints only a temporary bundle path.
-- **Save PR evidence**
-  - Move the lookup response into the bundle as `pr.json`.
-  - Save Gitea's files, reviews, issue comments, and full diff as `gitea-files.json`,
-    `reviews.json`, `discussion.json`, and `gitea.diff`.
-  - For each review ID, fetch `repos/OWNER/REPO/pulls/N/reviews/ID/comments`; combine
-    all pages and reviews into `inline.json`. If any retrieval fails, save
-    `{"status":"unavailable","reason":"..."}` there and investigate the PR page.
-  - Combine all pages of each paginated list. Keep bulk responses out of model output.
+  - `prepare` and `preflight` write Git fetch metadata. If the sandbox denies
+    `.git/FETCH_HEAD`, retry the same command with repository metadata access.
+- **Collect PR evidence**
+  - Copy the lookup response into the bundle as `pr.json`, then run
+    `python3 <skill-dir>/scripts/review_pr.py collect --bundle DIR --number N`.
+  - The command saves all pages of Gitea's files, reviews, issue comments,
+    per-review inline comments, and full diff. It reports counts without printing
+    bulk responses. If inline retrieval fails or disagrees with PR metadata,
+    investigate the PR page and record the history limit in the review.
 - **Check intake**
-  - Run `python3 <skill-dir>/scripts/review_pr.py intake --bundle DIR`.
+  - After collection succeeds, run `python3 <skill-dir>/scripts/review_pr.py intake --bundle DIR`.
   - Its compact output checks PR refs and reconciles every changed file with `manifest.json`.
     Read `files.txt`. If inline comments are unavailable, state the resulting history
     limit in the review.

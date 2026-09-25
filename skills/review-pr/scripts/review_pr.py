@@ -116,6 +116,66 @@ def prepare(args):
     print(bundle)
 
 
+def collect(args):
+    """Save paginated Gitea evidence for a prepared PR bundle."""
+    bundle, manifest = load_bundle(args.bundle)
+    if not manifest["expected_head"]:
+        raise ValueError("collect requires a PR bundle")
+    pr = json.loads((bundle / "pr.json").read_text())
+    repo_path = urlsplit(manifest["repo_url"]).path.strip("/")
+    if len(repo_path.split("/")) != 2:
+        raise ValueError("cannot derive owner/repo from the PR repository URL")
+    remote = manifest["target"].split("/", 1)[0]
+    base = f"repos/{repo_path}/pulls/{args.number}"
+
+    def api(endpoint):
+        """Read one authenticated Gitea API response."""
+        result = subprocess.run(["tea", "api", "--remote", remote, endpoint], capture_output=True, check=False)
+        if result.returncode:
+            raise ValueError(result.stderr.decode(errors="replace").strip() or f"Gitea request failed: {endpoint}")
+        return result.stdout
+
+    def pages(endpoint):
+        """Read every page of a Gitea list endpoint."""
+        items = []
+        for page in range(1, 101):
+            separator = "&" if "?" in endpoint else "?"
+            result = json.loads(api(f"{endpoint}{separator}limit=50&page={page}"))
+            if not isinstance(result, list):
+                raise ValueError(f"Gitea list request failed: {endpoint}")
+            items.extend(result)
+            if len(result) < 50:
+                return items
+        raise ValueError(f"Gitea pagination exceeded 100 pages: {endpoint}")
+
+    files = pages(f"{base}/files")
+    reviews = pages(f"{base}/reviews")
+    discussion = pages(f"repos/{repo_path}/issues/{args.number}/comments")
+    diff = api(f"{base}.diff")
+    if not diff or diff.lstrip().startswith(b'{"message"'):
+        raise ValueError("Gitea PR diff is empty or unavailable")
+    inline = []
+    try:
+        for review in reviews:
+            inline.extend(pages(f"{base}/reviews/{review['id']}/comments"))
+    except (KeyError, ValueError) as exc:
+        inline = {"status": "unavailable", "reason": str(exc)}
+    if isinstance(inline, list) and isinstance(pr.get("review_comments"), int) and len(inline) != pr["review_comments"]:
+        inline = {
+            "status": "unavailable",
+            "reason": f"Gitea reports {pr['review_comments']} inline comments; review endpoints returned {len(inline)}",
+        }
+    for name, value in (("gitea-files.json", files), ("reviews.json", reviews),
+                        ("discussion.json", discussion), ("inline.json", inline)):
+        (bundle / name).write_text(json.dumps(value, indent=2) + "\n")
+    (bundle / "gitea.diff").write_bytes(diff)
+    print(json.dumps({"files": len(files), "reviews": len(reviews),
+                      "discussion_comments": len(discussion),
+                      "inline_status": "complete" if isinstance(inline, list) else "unavailable",
+                      "inline_comments": len(inline) if isinstance(inline, list) else None,
+                      "inline_reason": inline.get("reason") if isinstance(inline, dict) else None}))
+
+
 def intake(args):
     """Summarize saved Gitea responses and verify changed-file coverage."""
     bundle, manifest = load_bundle(args.bundle)
@@ -229,6 +289,10 @@ def main():
     prep.add_argument("--expected-head")
     prep.add_argument("--repo-url")
     prep.set_defaults(action=prepare)
+    evidence = commands.add_parser("collect")
+    evidence.add_argument("--bundle", required=True)
+    evidence.add_argument("--number", type=int, required=True)
+    evidence.set_defaults(action=collect)
     summary = commands.add_parser("intake")
     summary.add_argument("--bundle", required=True)
     summary.set_defaults(action=intake)

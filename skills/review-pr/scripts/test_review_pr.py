@@ -23,6 +23,45 @@ SPEC.loader.exec_module(review_pr)
 class ReviewPrTest(unittest.TestCase):
     """Check the CLI against a small repository and local remote."""
 
+    def test_collect_tracks_complete_and_unavailable_inline_history(self):
+        """Collect paginated evidence and disclose missing inline comments."""
+        with tempfile.TemporaryDirectory() as temp:
+            bundle = Path(temp)
+            (bundle / "pr.json").write_text(json.dumps({"review_comments": 1}))
+            manifest = {"expected_head": "abc", "repo_url": "https://git.example/owner/repo", "target": "origin/dev"}
+            args = SimpleNamespace(bundle=str(bundle), number=42)
+
+            def response(command, **_kwargs):
+                """Return deterministic Gitea pages for the collector."""
+                self.assertEqual(command[2:4], ["--remote", "origin"])
+                endpoint = command[-1]
+                if endpoint.endswith(".diff"):
+                    body = "diff --git a/app.py b/app.py\n"
+                elif "/files?" in endpoint:
+                    body = json.dumps([{"filename": f"file-{n}"} for n in range(50)] if "page=1" in endpoint else [{"filename": "last"}])
+                elif "/reviews/12/comments?" in endpoint:
+                    body = '{"message":"not found"}' if mode == "error" else json.dumps([{"id": 7}] if mode == "complete" else [])
+                elif "/reviews?" in endpoint:
+                    body = json.dumps([{"id": 12}])
+                elif "/issues/42/comments?" in endpoint:
+                    body = "[]"
+                else:
+                    raise AssertionError(endpoint)
+                return subprocess.CompletedProcess(command, 0, body.encode(), b"")
+
+            for mode in ("complete", "mismatch", "error"):
+                with self.subTest(mode=mode), mock.patch.object(review_pr, "load_bundle", return_value=(bundle, manifest)), mock.patch.object(
+                    review_pr.subprocess, "run", side_effect=response
+                ), redirect_stdout(StringIO()) as printed:
+                    review_pr.collect(args)
+                result = json.loads(printed.getvalue())
+                self.assertEqual(result["files"], 51)
+                self.assertEqual(len(json.loads((bundle / "gitea-files.json").read_text())), 51)
+                self.assertTrue((bundle / "gitea.diff").read_bytes().startswith(b"diff --git"))
+                self.assertEqual(result["inline_status"], "complete" if mode == "complete" else "unavailable")
+                if mode != "complete":
+                    self.assertTrue(json.loads((bundle / "inline.json").read_text())["reason"])
+
     def test_lookup_uses_remote_owner_and_rejects_api_errors(self):
         """Resolve the repository from Git and save only a valid PR response."""
         pr = {
