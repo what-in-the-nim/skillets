@@ -18,41 +18,45 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
   - Run `python3 <skill-dir>/scripts/review_pr.py lookup --number N --output /tmp/pr-N.json`.
     Use `--remote NAME` when the target repository is not `origin`.
   - The command derives the Gitea owner/repository from that remote, rejects API errors,
-    saves the raw response, and prints compact PR metadata.
+    saves the raw response, and prints compact PR metadata including the author.
 - **Pin the refs**
-  - Fetch the exact head and base as remote-tracking refs, including a fork remote when needed.
-  - For PRs, pass qualified refs such as `--source origin/feature/login --target origin/dev`.
-    Bare branch names are for branch reviews.
+  - For PRs, use remote-tracking refs such as `--source origin/feature/login --target origin/dev`.
+    Add a fork remote when the head is in a fork. Bare branch names are for branch reviews.
 - **Prepare the bundle**
   - Run `python3 <skill-dir>/scripts/review_pr.py prepare --source REF [--target REF]`.
     Add `--expected-head SHA --repo-url URL` for a PR.
-  - The script refreshes remote-tracking refs, defaults to `origin/dev`, verifies the head,
+  - The script fetches remote-tracking refs, defaults to `origin/dev`, verifies the head,
     and prints only a temporary bundle path.
 - **Save PR evidence**
   - Move the lookup response into the bundle as `pr.json`.
-  - Save Gitea's files, reviews, issue comments, inline comments, and full diff as
-    `gitea-files.json`, `reviews.json`, `discussion.json`, `inline.json`, and `gitea.diff`.
-  - Combine all pages of each paginated list into its JSON file. Keep bulk responses
-    out of the model output.
+  - Save Gitea's files, reviews, issue comments, and full diff as `gitea-files.json`,
+    `reviews.json`, `discussion.json`, and `gitea.diff`.
+  - For each review ID, fetch `repos/OWNER/REPO/pulls/N/reviews/ID/comments`; combine
+    all pages and reviews into `inline.json`. If any retrieval fails, save
+    `{"status":"unavailable","reason":"..."}` there and investigate the PR page.
+  - Combine all pages of each paginated list. Keep bulk responses out of model output.
 - **Check intake**
   - Run `python3 <skill-dir>/scripts/review_pr.py intake --bundle DIR`.
   - Its compact output checks PR refs and reconciles every changed file with `manifest.json`.
-    Read `files.txt`.
-- **Hand off**
-  - Pass bundle and repository paths, rather than copied diff text, to one reviewer subagent.
-  - It reads Gitea's diff for a PR or `diff.patch` for a branch, every changed file at the
-    recorded source SHA (target SHA for deletions), and listed docs.
+    Read `files.txt`. If inline comments are unavailable, state the resulting history
+    limit in the review.
+- **Choose the reviewer**
+  - Review a contained patch directly. For a broad or cross-module change, delegate
+    the technical review to one subagent; pass bundle and repository paths, not copied
+    diff text or the full lead history.
+  - The reviewer reads Gitea's diff for a PR or `diff.patch` for a branch, every changed
+    file at the recorded source SHA (target SHA for deletions), and listed docs.
 
 ## Review
 
-- **Reviewer:** Trace callers, removed behavior, failure paths, and documented contracts.
-  Return candidate findings and coverage for every changed file, including tests, config,
-  and migrations.
-- **Lead:** Check coverage against `files.txt` and send omissions back. Own prior-finding
-  reconciliation, focused reproductions, the verdict, and publication. Run focused tests
-  for the changed behavior first; broaden only for a concrete remaining risk. Independently
-  verify each finding against current code and a concrete consequence; discard unsupported
-  claims.
+- **Technical owner:** The lead when reviewing alone, otherwise the reviewer. Trace
+  callers, removed behavior, failure paths, and documented contracts. Return coverage
+  for every changed file, including tests, config, and migrations, plus candidate findings
+  with the code path and consequence. Run a focused reproduction or test when a finding
+  needs one; broaden tests only for a concrete remaining risk.
+- **Lead with reviewer:** Check coverage against `files.txt` and the decisive evidence for
+  each finding. Send gaps back as targeted follow-ups; avoid repeating the full code trace.
+  Own prior-finding reconciliation, the verdict, and publication. Discard unsupported claims.
 - **Severity:** List findings in order: 🔴 Blocker, 🟠 Medium risk, 🟡 Low risk, 🔵 Nit.
   Use the same labels in the local file and published body.
 - **Re-review status:** Match prior findings by problem. Use the exact labels `🆕 NEW`,
@@ -68,6 +72,8 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
 
 - **Choose the verdict:** For a PR, use `REQUEST_CHANGES`, `APPROVED`, or `COMMENT`
   as the Gitea API event.
+  Run `tea whoami` and compare its login with the author from `lookup`. For your own PR,
+  use `COMMENT`; align the body heading with that verdict.
   Draft the body using [the request-changes template](templates/request-changes.md) when appropriate.
 - **Add code links**
   - Put `{{code:path:L10-L15}}` on its own line after each current-code finding, or

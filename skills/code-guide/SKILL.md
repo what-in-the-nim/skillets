@@ -1,11 +1,11 @@
 ---
 name: code-guide
-description: Explain code, a diff, PR changes, a class, a module, or a package by building the simplest correct model, adding one edge case at a time, and ending at the current design.
+description: Use when the user requests a detailed walkthrough or design explanation of code, a diff, PR changes, a class, a module, or a package.
 ---
 
 # Code Guide
 
-Use this method for a code walkthrough or design explanation.
+Use this method for a requested detailed walkthrough or design explanation. For concise Q&A about code created or changed in the current task, use `code-qa` only when the user explicitly invokes it. A short question alone does not call for this walkthrough.
 
 ## Method
 

@@ -28,6 +28,7 @@ class ReviewPrTest(unittest.TestCase):
         pr = {
             "title": "Change", "head": {"sha": "abc", "ref": "feature"},
             "base": {"ref": "dev", "repo": {"full_name": "owner/repo", "html_url": "https://git.example/owner/repo"}},
+            "user": {"login": "author"},
         }
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "pr.json"
@@ -40,6 +41,7 @@ class ReviewPrTest(unittest.TestCase):
                 self.assertEqual(api.call_args.args[0][2:4], ["--remote", "origin"])
                 self.assertEqual(api.call_args.args[0][-1], "repos/owner/repo/pulls/42")
                 self.assertEqual(json.loads(printed.getvalue())["head"], "abc")
+                self.assertEqual(json.loads(printed.getvalue())["author"], "author")
                 self.assertEqual(json.loads(output.read_text()), pr)
 
             output.unlink()
@@ -111,6 +113,27 @@ class ReviewPrTest(unittest.TestCase):
             self.assertEqual(summary["changed_files"], ["app.py"])
             self.assertEqual(summary["review_ids"], [12])
             self.assertEqual(summary["discussion_comments"], 1)
+            self.assertEqual(summary["inline_status"], "complete")
+            self.assertEqual(summary["inline_comments"], 0)
+            (bundle / "inline.json").write_text(json.dumps({"status": "unavailable", "reason": "review 12 comments returned not found"}))
+            summary_text, _ = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work)
+            summary = json.loads(summary_text)
+            self.assertEqual(summary["inline_status"], "unavailable")
+            self.assertIsNone(summary["inline_comments"])
+            self.assertIn("review 12", summary["inline_reason"])
+            (bundle / "inline.json").write_text("[]")
+            pr_file = bundle / "pr.json"
+            pr = json.loads(pr_file.read_text())
+            pr["review_comments"] = 1
+            pr_file.write_text(json.dumps(pr))
+            _, error = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work, ok=False)
+            self.assertIn("inline comment count differs", error)
+            pr.pop("review_comments")
+            pr_file.write_text(json.dumps(pr))
+            (bundle / "inline.json").write_text(json.dumps({"message": "not found"}))
+            _, error = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work, ok=False)
+            self.assertIn("inline comments must be", error)
+            (bundle / "inline.json").write_text("[]")
             (bundle / "gitea-files.json").write_text("[]")
             _, error = run(sys.executable, str(SCRIPT), "intake", "--bundle", str(bundle), cwd=work, ok=False)
             self.assertIn("file list differs", error)

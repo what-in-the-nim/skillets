@@ -262,37 +262,25 @@ def pytest_report_header(config):
 
 ## §8 — Class-Based Test Organization
 
-```python
-class TestUserService:
-    @pytest.fixture(autouse=True)
-    def setup(self, db_session, user_factory):
-        self.db = db_session
-        self.create_user = user_factory
-        self.service = UserService(db_session)
+Use stateless, behavior-named classes for grouping. Pass dependencies through fixtures instead of storing setup state on the class.
 
-    def test_create_user(self):
-        user = self.service.create("Alice", "alice@test.com")
+```python
+class TestUserCreate:
+    def test_create_user_returns_saved_user(self, user_service):
+        user = user_service.create("Alice", "alice@test.com")
         assert user.id is not None
         assert user.name == "Alice"
 
-    def test_find_by_email(self):
-        self.create_user(name="Bob", email="bob@test.com")
-        user = self.service.find_by_email("bob@test.com")
+class TestUserFindByEmail:
+    def test_returns_matching_user(self, user_service, user_factory):
+        user_factory(name="Bob", email="bob@test.com")
+        user = user_service.find_by_email("bob@test.com")
         assert user.name == "Bob"
 
-    def test_delete_nonexistent(self):
+class TestUserDelete:
+    def test_delete_nonexistent_raises_not_found(self, user_service):
         with pytest.raises(NotFoundError):
-            self.service.delete(999)
-
-    class TestPermissions:
-        """Nested class for permission-related tests"""
-        def test_admin_can_delete(self, user_factory):
-            admin = user_factory(role="admin")
-            assert admin.can_delete()
-
-        def test_viewer_cannot_delete(self, user_factory):
-            viewer = user_factory(role="viewer")
-            assert not viewer.can_delete()
+            user_service.delete(999)
 ```
 
 ## §9 — CI/CD Integration

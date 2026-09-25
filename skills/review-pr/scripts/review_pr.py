@@ -46,7 +46,8 @@ def lookup(args):
         summary = {
             "title": pr["title"], "head": pr["head"]["sha"],
             "head_ref": pr["head"]["ref"], "base": pr["base"]["ref"],
-            "repo_url": pr["base"]["repo"]["html_url"], "pr_file": args.output,
+            "repo_url": pr["base"]["repo"]["html_url"],
+            "author": pr["user"]["login"], "pr_file": args.output,
         }
         base_repo = pr["base"]["repo"]["full_name"]
     except (KeyError, TypeError):
@@ -130,8 +131,16 @@ def intake(args):
     inline = read_json("inline.json")
     if pr["head"]["sha"] != manifest["source_sha"] or pr["base"]["ref"] != manifest["target"].split("/", 1)[-1]:
         raise ValueError("Gitea PR refs differ from the prepared bundle; review the current PR")
-    if not all(isinstance(items, list) for items in (files, reviews, discussion, inline)):
-        raise ValueError("Gitea files, reviews, and comments responses must be lists")
+    if not all(isinstance(items, list) for items in (files, reviews, discussion)):
+        raise ValueError("Gitea files, reviews, and discussion responses must be lists")
+    if isinstance(inline, list):
+        inline_status, inline_count = "complete", len(inline)
+    elif isinstance(inline, dict) and inline.get("status") == "unavailable" and isinstance(inline.get("reason"), str) and inline["reason"]:
+        inline_status, inline_count = "unavailable", None
+    else:
+        raise ValueError("inline comments must be a list or an unavailable status with a reason")
+    if inline_status == "complete" and isinstance(pr.get("review_comments"), int) and inline_count != pr["review_comments"]:
+        raise ValueError("inline comment count differs from Gitea PR metadata")
     api_files = {item["filename"] for item in files}
     prepared_files = set(manifest["changed_files"])
     if api_files != prepared_files:
@@ -142,7 +151,9 @@ def intake(args):
         "title": pr["title"], "head": pr["head"]["sha"], "base": pr["base"]["ref"],
         "changed_files": manifest["changed_files"],
         "review_ids": [item["id"] for item in reviews],
-        "discussion_comments": len(discussion), "inline_comments": len(inline),
+        "discussion_comments": len(discussion), "inline_comments": inline_count,
+        "inline_status": inline_status,
+        "inline_reason": inline["reason"] if inline_status == "unavailable" else None,
     }))
 
 
