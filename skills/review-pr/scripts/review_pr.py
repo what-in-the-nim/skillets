@@ -23,6 +23,40 @@ def git(*args):
     return result.stdout
 
 
+def lookup(args):
+    """Fetch one PR through the repository's remote and save its checked response."""
+    remote_url = git("remote", "get-url", args.remote).decode().strip()
+    if "://" in remote_url:
+        repo_path = urlsplit(remote_url).path.lstrip("/")
+    else:
+        repo_path = remote_url.partition(":")[2]
+    repo_path = repo_path.removesuffix(".git")
+    if len(repo_path.split("/")) != 2 or not all(repo_path.split("/")):
+        raise ValueError(f"cannot derive owner/repo from {args.remote} remote")
+    result = subprocess.run(
+        ["tea", "api", "--remote", args.remote, f"repos/{repo_path}/pulls/{args.number}"],
+        capture_output=True, check=False,
+    )
+    if result.returncode:
+        raise ValueError(result.stderr.decode(errors="replace").strip() or "tea api failed")
+    pr = json.loads(result.stdout)
+    if not isinstance(pr, dict) or pr.get("message") or not all(key in pr for key in ("title", "head", "base")):
+        raise ValueError(f"Gitea PR lookup failed: {pr.get('message', 'invalid response') if isinstance(pr, dict) else 'invalid response'}")
+    try:
+        summary = {
+            "title": pr["title"], "head": pr["head"]["sha"],
+            "head_ref": pr["head"]["ref"], "base": pr["base"]["ref"],
+            "repo_url": pr["base"]["repo"]["html_url"], "pr_file": args.output,
+        }
+        base_repo = pr["base"]["repo"]["full_name"]
+    except (KeyError, TypeError):
+        raise ValueError("Gitea PR response is missing required fields") from None
+    if base_repo != repo_path:
+        raise ValueError("Gitea PR base repository differs from the selected remote")
+    Path(args.output).write_bytes(result.stdout)
+    print(json.dumps(summary))
+
+
 def ref_sha(ref):
     """Resolve a ref to a full commit SHA."""
     if ref.startswith("-"):
@@ -173,6 +207,11 @@ def main():
     """Dispatch a quiet, deterministic review preparation command."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    pr_lookup = commands.add_parser("lookup")
+    pr_lookup.add_argument("--number", type=int, required=True)
+    pr_lookup.add_argument("--remote", default="origin")
+    pr_lookup.add_argument("--output", required=True)
+    pr_lookup.set_defaults(action=lookup)
     prep = commands.add_parser("prepare")
     prep.add_argument("--source", required=True)
     prep.add_argument("--target", default="origin/dev")

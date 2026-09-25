@@ -1,19 +1,60 @@
 """Exercise the review bundle, permalink formatter, and stale-ref gate."""
 
 from pathlib import Path
+from contextlib import redirect_stdout
+from io import StringIO
+import importlib.util
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 
 SCRIPT = Path(__file__).with_name("review_pr.py")
+SPEC = importlib.util.spec_from_file_location("review_pr", SCRIPT)
+review_pr = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(review_pr)
 
 
 class ReviewPrTest(unittest.TestCase):
     """Check the CLI against a small repository and local remote."""
+
+    def test_lookup_uses_remote_owner_and_rejects_api_errors(self):
+        """Resolve the repository from Git and save only a valid PR response."""
+        pr = {
+            "title": "Change", "head": {"sha": "abc", "ref": "feature"},
+            "base": {"ref": "dev", "repo": {"full_name": "owner/repo", "html_url": "https://git.example/owner/repo"}},
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "pr.json"
+            args = SimpleNamespace(remote="origin", number=42, output=str(output))
+            for remote_url in (b"git@git.example:owner/repo.git\n", b"https://git.example/owner/repo.git\n"):
+                with mock.patch.object(review_pr, "git", return_value=remote_url), mock.patch.object(
+                    review_pr.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(pr).encode(), b"")
+                ) as api, redirect_stdout(StringIO()) as printed:
+                    review_pr.lookup(args)
+                self.assertEqual(api.call_args.args[0][2:4], ["--remote", "origin"])
+                self.assertEqual(api.call_args.args[0][-1], "repos/owner/repo/pulls/42")
+                self.assertEqual(json.loads(printed.getvalue())["head"], "abc")
+                self.assertEqual(json.loads(output.read_text()), pr)
+
+            output.unlink()
+            with mock.patch.object(review_pr, "git", return_value=b"git@git.example:owner/repo.git\n"), mock.patch.object(
+                review_pr.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, b'{"message":"not found"}', b"")
+            ), self.assertRaisesRegex(ValueError, "not found"):
+                review_pr.lookup(args)
+            self.assertFalse(output.exists())
+
+            pr["base"]["repo"]["full_name"] = "other/repo"
+            with mock.patch.object(review_pr, "git", return_value=b"git@git.example:owner/repo.git\n"), mock.patch.object(
+                review_pr.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, json.dumps(pr).encode(), b"")
+            ), self.assertRaisesRegex(ValueError, "differs from the selected remote"):
+                review_pr.lookup(args)
+            self.assertFalse(output.exists())
 
     def test_bundle_preview_and_stale_target(self):
         """Keep preparation quiet and stop posting after the base moves."""

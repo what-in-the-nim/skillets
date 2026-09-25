@@ -15,8 +15,10 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
 ## Prepare
 
 - **Read the PR**
-  - Save the raw Gitea PR API response to a temporary file.
-  - Print only its title, head SHA, base, and repository URL.
+  - Run `python3 <skill-dir>/scripts/review_pr.py lookup --number N --output /tmp/pr-N.json`.
+    Use `--remote NAME` when the target repository is not `origin`.
+  - The command derives the Gitea owner/repository from that remote, rejects API errors,
+    saves the raw response, and prints compact PR metadata.
 - **Pin the refs**
   - Fetch the exact head and base as remote-tracking refs, including a fork remote when needed.
   - For PRs, pass qualified refs such as `--source origin/feature/login --target origin/dev`.
@@ -27,7 +29,7 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
   - The script refreshes remote-tracking refs, defaults to `origin/dev`, verifies the head,
     and prints only a temporary bundle path.
 - **Save PR evidence**
-  - Move the saved PR response into the bundle as `pr.json`.
+  - Move the lookup response into the bundle as `pr.json`.
   - Save Gitea's files, reviews, issue comments, inline comments, and full diff as
     `gitea-files.json`, `reviews.json`, `discussion.json`, `inline.json`, and `gitea.diff`.
   - Combine all pages of each paginated list into its JSON file. Keep bulk responses
@@ -47,9 +49,10 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
   Return candidate findings and coverage for every changed file, including tests, config,
   and migrations.
 - **Lead:** Check coverage against `files.txt` and send omissions back. Own prior-finding
-  reconciliation, focused reproductions, the verdict, and publication. Run relevant tests
-  when feasible. Independently verify each finding against current code and a concrete
-  consequence; discard unsupported claims.
+  reconciliation, focused reproductions, the verdict, and publication. Run focused tests
+  for the changed behavior first; broaden only for a concrete remaining risk. Independently
+  verify each finding against current code and a concrete consequence; discard unsupported
+  claims.
 - **Severity:** List findings in order: 🔴 Blocker, 🟠 Medium risk, 🟡 Low risk, 🔵 Nit.
   Use the same labels in the local file and published body.
 - **Re-review status:** Match prior findings by problem. Use the exact labels `🆕 NEW`,
@@ -63,7 +66,8 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
 
 ## Publish
 
-- **Choose the verdict:** For a PR, use `REQUEST_CHANGES`, `APPROVE`, or `COMMENT`.
+- **Choose the verdict:** For a PR, use `REQUEST_CHANGES`, `APPROVED`, or `COMMENT`
+  as the Gitea API event.
   Draft the body using [the request-changes template](templates/request-changes.md) when appropriate.
 - **Add code links**
   - Put `{{code:path:L10-L15}}` on its own line after each current-code finding, or
@@ -78,7 +82,11 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
 - **Submit and verify**
   - Submit one review through `gitea` within existing authorization; otherwise present
     the complete draft for approval.
-  - Read back the verdict, reviewed commit, exact body, and permalink URLs.
+  - When using the Gitea reviews API, create the review with `body`, `commit_id`, and the
+    selected event. Inspect the returned `state`: if it is `PENDING`, submit that review ID
+    through `POST repos/OWNER/REPO/pulls/N/reviews/ID` with the same body and event.
+  - Read back the final verdict, reviewed commit, exact body, and permalink URLs.
+    A `PENDING` review is unfinished.
   - Check the Gitea page before claiming the links render as previews.
 - **Report:** Give the local file, PR URL, and result. A branch without a PR produces
   only the local review.
