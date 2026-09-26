@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Review PR
 
-Run from the target repository. Use `gitea` for PR lookup, discussion, submission, and readback.
+Run from the target repository. Use `gitea` for PR lookup, discussion, submission, and readback. Do not use computer-use or browser UI automation; use the Gitea CLI/API and local repository data.
 
 - `review-pr 123`: review PR 123.
 - `review-pr feature/login`: review the branch against `origin/dev`.
@@ -35,7 +35,7 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
   - The command saves all pages of Gitea's files, reviews, issue comments,
     per-review inline comments, and full diff. It reports counts without printing
     bulk responses. If inline retrieval fails or disagrees with PR metadata,
-    investigate the PR page and record the history limit in the review.
+    retry through the Gitea API or record the history limit in the review.
 - **Check intake**
   - After collection succeeds, run `python3 <skill-dir>/scripts/review_pr.py intake --bundle DIR`.
   - Its compact output checks PR refs and reconciles every changed file with `manifest.json`.
@@ -94,6 +94,7 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
     through `POST repos/OWNER/REPO/pulls/N/reviews/ID` with the same body and event.
   - Read back the final verdict, reviewed commit, exact body, and permalink URLs.
     A `PENDING` review is unfinished.
-  - Check the Gitea page before claiming the links render as previews.
+  - Do not claim the links render as previews; validate their commit and line ranges from
+    the Gitea API and report them as permalinks.
 - **Report:** Give the local file, PR URL, and result. A branch without a PR produces
   only the local review.
