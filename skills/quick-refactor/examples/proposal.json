@@ -1,16 +1,105 @@
 {
-  "title": "Example: move retry policy to its owner",
+  "schema_version": 3,
+  "title": "Give retry decisions one owner",
   "target": "Illustrative worker",
+  "repository": "/example/repository",
   "revision": "Example only",
-  "date": "2026-09-13",
-  "sections": [
-    {"id": "recommendation", "title": "Recommendation", "body_html": "<ul><li>Give retry decisions one owner.</li><li>This example demonstrates a proposal, not a confirmed runtime bug.</li></ul>"},
-    {"id": "process", "title": "Overall process", "diagrams": {"before": "@before.mmd", "after": "@after.mmd"}},
-    {"id": "ownership", "title": "Ownership", "diagrams": {"before": "@before-class.mmd", "after": "@after-class.mmd"}},
-    {"id": "timing", "title": "Ordering", "diagrams": {"before": "@before-sequence.mmd", "after": "@after-sequence.mmd"}},
-    {"id": "target-design", "title": "Target design", "body_html": "<ul><li>Worker owns orchestration and resource teardown.</li><li>RetryPolicy owns attempt limits and retry decisions.</li><li>Target also consolidates the second caller; that migration follows the first PR.</li></ul>"},
-    {"id": "evidence", "title": "Evidence", "collapsed": true, "evidence": [{"strength": "proposed improvement", "text": "Isolated policy tests could reduce setup cost.", "source": "Illustrative design; verify real callers and tests before proposing this extraction."}]},
-    {"id": "validation", "title": "Validation", "collapsed": true, "body_html": "<ul><li>Proposed, not executed: assert retry decisions at the attempt limit.</li><li>Retain integration coverage for cancellation and worker teardown.</li></ul>"},
-    {"id": "first-pr", "title": "First PR", "body_html": "<ul><li>Extract retry decisions for one worker and add focused behavior tests.</li><li>Preserve attempt limits and failure propagation.</li><li>Defer the second caller migration; the first step is independently useful.</li></ul>"}
-  ]
+  "date": "2026-09-26",
+  "evidence_status": "Illustrative design; no source inspection or tests executed",
+  "choices": [
+    {
+      "id": "retry",
+      "title": "Retry policy",
+      "friction": "Worker mixes attempt execution with retry decisions.",
+      "benefit": "Policy checks need less worker setup.",
+      "first_slice": "Extract next_delay for one worker.",
+      "tradeoff": "Adds a narrow interface.",
+      "evidence_ids": [
+        "retry-evidence"
+      ],
+      "visualization": {
+        "type": "flow",
+        "before": [
+          "Worker executes attempt",
+          "Worker decides retry",
+          "Worker waits"
+        ],
+        "after": [
+          "Worker executes attempt",
+          "Policy decides retry",
+          "Worker waits"
+        ]
+      }
+    },
+    {
+      "id": "request",
+      "title": "Request construction",
+      "friction": "Worker also assembles provider payloads.",
+      "benefit": "Payload rules become easier to inspect.",
+      "first_slice": "Extract one request builder.",
+      "tradeoff": "Small payoff if construction is already short.",
+      "evidence_ids": [
+        "request-evidence"
+      ],
+      "visualization": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "publish",
+      "title": "Result delivery",
+      "friction": "Worker formats outcomes and calls delivery callbacks.",
+      "benefit": "Delivery decisions become local.",
+      "first_slice": "Extract formatting for one result path.",
+      "tradeoff": "Callback ordering needs integration coverage.",
+      "evidence_ids": [
+        "publish-evidence"
+      ],
+      "visualization": {
+        "type": "none"
+      }
+    }
+  ],
+  "shorter_list_reason": "",
+  "recommended_choice": "retry",
+  "recommendation_reason": "Retry decisions offer a narrow boundary while the worker retains execution and waiting. Verify these illustrative seams against real source before selecting them.",
+  "evidence": [
+    {
+      "id": "retry-evidence",
+      "choice_id": "retry",
+      "strength": "proposed improvement",
+      "confidence": "Illustrative only; real source support and benefit remain unverified.",
+      "claim": "Worker mixes attempt execution with retry decisions.",
+      "sources": []
+    },
+    {
+      "id": "request-evidence",
+      "choice_id": "request",
+      "strength": "proposed improvement",
+      "confidence": "Illustrative only; real source support and benefit remain unverified.",
+      "claim": "Worker also assembles provider payloads.",
+      "sources": []
+    },
+    {
+      "id": "publish-evidence",
+      "choice_id": "publish",
+      "strength": "proposed improvement",
+      "confidence": "Illustrative only; real source support and benefit remain unverified.",
+      "claim": "Worker formats outcomes and calls delivery callbacks.",
+      "sources": []
+    }
+  ],
+  "checks": [
+    {
+      "status": "proposed",
+      "description": "Check just below, at and above the retry limit.",
+      "result": "Not executed; this is an example."
+    },
+    {
+      "status": "not run",
+      "description": "Application tests and visual inspection.",
+      "result": "No application repository was evaluated."
+    }
+  ],
+  "stage": "choices"
 }

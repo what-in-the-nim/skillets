@@ -1,6 +1,0 @@
-sequenceDiagram
-    Caller->>Worker: run
-    Worker->>Worker: attempt
-    Worker->>RetryPolicy: should_retry
-    RetryPolicy-->>Worker: decision
-    Worker-->>Caller: result or failure

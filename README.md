@@ -13,7 +13,7 @@ Personal, reusable skills for agentic coding.
 - [`gitea`](skills/gitea/SKILL.md) — model-invoked Gitea operations through the `tea` CLI.
 - [`review-pr`](skills/review-pr/SKILL.md) — user-invoked Gitea PR or branch review with tracked re-reviews and a request-changes template. Invoke as `review-pr 123` for PR 123.
 - [`skill-improvement`](skills/skill-improvement/SKILL.md) — user-invoked skill to record real runs, compare friction and cost, and refine the skill with a follow-up check.
-- [`quick-refactor`](skills/quick-refactor/SKILL.md) — Sol finds three evidence-backed choices and recommends one; Luna produces an HTML report with before/after diagrams.
+- [`quick-refactor`](skills/quick-refactor/SKILL.md) — Sol proposes three choices; the user selects before detailed redesign. Python generates HTML with content-selected visualizations.
 
 These are the canonical package names for the coding-principle, code-guide, code-qa, class-design, testing-principle, pytest, quick-refactor, Gitea, Gitea PR-review, and skill-improvement skills.
 

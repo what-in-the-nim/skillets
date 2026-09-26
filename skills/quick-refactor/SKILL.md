@@ -1,45 +1,37 @@
 ---
 name: quick-refactor
-description: Use Sol to find three evidence-backed refactor choices and recommend one, then Luna to produce an HTML report. Use when the user asks for a quick refactor opportunity or proposal.
+description: Find three evidence-backed refactor choices with Sol, let the user select, then deepen that choice in a static HTML report. Use when the user asks for a quick refactor opportunity or proposal.
 ---
 
 # Quick Refactor
 
-Present three distinct refactor choices when the code supports them, then recommend one. Keep the proposal behavior-preserving and identify the recommended choice's smallest useful first PR. If fewer than three are supported, explain why and leave the list shorter.
+Default to two stages: **compare → user selects → deepen**. Recommend a choice without treating that recommendation as selection. If the user explicitly says “choose for me” or already specifies a choice to deepen, proceed with that selection.
 
-## Route the work
+## Route and preserve
 
-- Sol owns Find and Design; Luna owns Show and HTML generation. Use the available Sol and Luna model identifiers, defaulting to `gpt-6-sol` with high effort and `gpt-6-luna` with medium effort. Follow an explicit user model override.
-- When the current agent is Sol, do Find and Design directly. Otherwise dispatch one Sol worker with fresh context (`fork_turns="none"` where supported): pass the target, absolute repository and skill paths, user constraints, and a fresh output directory. Give it only Find, Design, and the handoff requirements below. The coordinator handles dispatch and delivery without repeating the investigation.
-- Reserve a fresh output directory beside relevant design documentation or at the requested location. Preserve existing artifacts unless replacement was explicitly requested. If model-selectable delegation is unavailable, disclose the limitation and complete the workflow on the current model; do not claim the requested split occurred.
+Sol owns investigation and design (`gpt-6-sol`, high); Luna coordinates and generates HTML (`gpt-6-luna`, medium). Follow explicit model overrides. When the current agent is Sol, author directly; otherwise dispatch one fresh Sol with target, absolute repository/skill paths, constraints, fresh output directory and the current stage only. Disclose unavailable model-selectable delegation.
 
-## Find — 40%
+The coordinator runs the Python renderer directly. Retain the Sol worker ID, artifact path and inspected revision for continuation. Reuse that worker for corrections and selected design; if unavailable, give a fresh Sol the selected choice, prior artifact, evidence and constraints. Preserve existing artifacts and unrelated WIP. Store the choices report and selected design in separate fresh directories.
 
-- Read repository guidance and status; preserve unrelated work. Treat a user-named module as the starting scope.
-- If no target is named, make a lightweight scan for distinct seams. If the user names a target, inspect it and its immediate neighbors. Seek three candidates grounded in concrete friction: split ownership, duplicated decisions, scattered state, or broad setup for a small behavior.
-- Make the choices distinct responsibility seams, not variations of one design. For each, inspect its responsible code and one direct caller or relevant test; cite the source evidence, likely benefit, and a small first slice. Expand one hop only when needed to settle ownership or a contract. Trace lifecycle, ordering, failure, or cancellation only when relevant.
-- Stop after three supported candidates. Do not pad the choices: if the bounded scan supports fewer than three, say why. Run a focused test or probe only to resolve a concrete uncertainty.
+## Stage 1 — Compare
 
-## Design — 40%
+1. Read repository guidance/status. Inventory paths with `rg --files`, search symbols, then batch bounded excerpts. Whole-file reads need a concrete ownership/ordering question. Inspect the named target and immediate neighbors; otherwise make a lightweight seam scan.
+2. Seek three distinct seams: split ownership, duplicated decisions, scattered state or broad setup. For each inspect responsible code and one direct caller or relevant test. Record friction, benefit, confidence, small first slice and main tradeoff. Expand one hop only to settle support. Stop when three choices are supported; explain a shorter list. Keep detailed interfaces, lifecycle redesign and acceptance planning for stage 2.
+3. Sol writes `proposal.json` with `stage: "choices"` using [the concise contract](authoring.md). Choose the appropriate visualization for each candidate; use none when a diagram would add no insight. Recommend one with a short reason. The coordinator generates the report using [render instructions](render-worker.md).
+4. Deliver the report and ask the user to select by number/name/ID, or say “choose for me.” End the turn. Start stage 2 only after an explicit selection or existing delegation of that choice; elapsed time is not selection. The static report tells the reader to reply in chat and does not imply that clicking a card launches work.
 
-- Present the choices in a short comparison: source-grounded friction, expected benefit, first slice, and main tradeoff for each.
-- Recommend one choice and give it the fuller design: responsibility, destination owner, narrow interface, reduced coupling/decisions/state/setup, and the invariant that remains intact. Keep the other choices concise.
-- Define the recommended first PR by affected files, caller changes, preserved behavior, and focused acceptance checks. Separate deferred parts of the target design when they matter.
-- Prefer an existing owner; add a class when state, invariants, or lifecycle need one. Use a function for stateless work. Keep policy with its domain owner.
-- State tradeoffs that help distinguish the three choices. Keep bug fixes and behavior changes separate from the refactors.
+## Stage 2 — Deepen selected choice
 
-## Show — 20%
+Confirm the selected ID and current repository HEAD/status. If source changed, refresh relevant excerpts and reassess that choice before designing; retain the earlier snapshot. Reuse existing evidence rather than repeating the whole scan.
 
-Sol finishes by writing `handoff.md`, using [the example](examples/proposal.md). Include target, revision, date, source locations and evidence strengths for each choice, benefits/tradeoffs/first slices, the recommendation and its reason, owner and interface, preserved invariants, affected files, deferred work, and executed versus proposed checks. Describe the before/after flow as nodes and edges or fenced Mermaid. Keep it concise: up to three bullets per section.
+Give Sol only the selected design task. Develop owner, responsibility boundary, narrow interface, preserved invariants, detailed visualization/code where useful, first-PR files/acceptance and deferred work. Prefer existing owners; functions for stateless work, classes for justified state/invariants/lifecycle. Separate bug fixes and behavior changes. Run tests/probes only when authorized and needed to settle a concrete uncertainty.
 
-The handoff is complete when Luna can produce the report without inspecting application code or choosing the design. Sol supplies any lifecycle or ordering constraints the diagram must preserve. Send incomplete or ambiguous technical details back to Sol before rendering.
+Author a new JSON with `stage: "design"` and `selected_choice`, using [selected-design fields](design.md). Retain the supported comparison and distinguish the user's choice from Sol's original recommendation. The coordinator renders deterministically. Return missing/ambiguous technical facts to the same Sol; routine second review of copied facts is unnecessary. Sol owns source support and semantics.
 
-Dispatch one Luna worker with fresh context: pass only the absolute handoff path, output directory, skill path, and [render-worker instructions](render-worker.md). Wait for its result. After Luna's fidelity preflight, give Sol only `proposal.json`, the authored `.mmd` files, and the render/check summary for comparison with its existing handoff. Sol checks recommendation, source references and confidence qualifiers, invariants, diagram semantics, and first-PR scope. Keep generated HTML, CSS, and SVG out of Sol's review context; Luna owns artifact and presentation checks. Reuse the same workers for corrections rather than restarting their investigation.
+## Presentation and delivery
 
-## Deliver
+Visualization follows the content: flow for responsibilities/data movement, class for ownership/interfaces, sequence for ordering across participants, code comparison for a local extraction, none for an already clear change. Plain HTML/CSS generation uses no SVG, Mermaid, JavaScript or browser. The user opens the report. Keep all sections visible; use headings and spacing to keep the main path easy to scan. Visual readability remains unchecked unless inspection was requested.
 
-Deliver `report.html`, with `handoff.md` and renderer inputs retained beside it for review and regeneration. Headless browser compilation by the existing renderer is allowed; open a visible browser preview only when requested. If rendering is blocked, deliver the handoff and the exact rendering limitation.
+Normal final response: report link, one-sentence recommendation, checks and next action, normally within 120 words. Stage 1 ends with the selection request; stage 2 gives the selected first PR. Keep detailed comparisons/design/evidence in HTML. On failure link retained JSON and state the exact limitation. Requested evaluation metrics or material limitations can extend the short format.
 
-Give the HTML link, a short recommendation, and which checks ran. Record actual worker models/efforts and available per-agent input, cached input, output, tool calls, and elapsed time in the improvement ledger when evaluating a run. Treat savings as unverified until usage and applicable model/cache prices support them.
-
-Implement only when authorized; commit, push, or open a PR only when requested.
+Keep read/retry/status/usage audit separate from technical input. When evaluating, use each agent's own usage records; account quota is not task usage. Record stage scopes separately and combined when complete. Savings need comparable quality and pricing. Implement, commit, push or open a PR only when authorized.
