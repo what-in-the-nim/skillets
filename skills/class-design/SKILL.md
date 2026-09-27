@@ -18,7 +18,7 @@ During implementation, apply these checks internally and keep edits within scope
 1. **Single responsibility.** Own one responsibility; split unrelated responsibilities.
 2. **Cohesion.** Keep fields and methods focused on the same concept; separate independent state groups.
 3. **Conceptual clarity.** Name the class after the concept it represents, and make its primary state and operations unsurprising from that name. A reader should be able to form a correct basic usage model without inspecting the implementation. Prefer conventional attribute and method names; avoid hidden roles, ambiguous state, and interfaces that require source-code archaeology.
-4. **Minimal interface.** Expose necessary operations, preferably at the level of the caller's task. Each public method or mutable property adds states and misuse paths.
+4. **Minimal interface.** Expose necessary operations, preferably at the level of the caller's task. Each public method or mutable property adds states and misuse paths. Trace query costs through callers, especially on repeated paths. Answer narrow questions from the relevant state; reserve bulk snapshots and history traversal for callers that need them.
 5. **Valid states.** Use explicit states or constrained representations to prevent contradictory combinations. Define transitions for non-trivial lifecycles.
 6. **Lifecycle.** Define when the object is usable, allowed operations, resource ownership, cleanup, and initialization or shutdown failure behavior.
 7. **Idempotent cleanup.** Repeated close, stop, cancel, cleanup, or unsubscribe calls must not corrupt state, leak resources, or race.
