@@ -27,6 +27,9 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
     Add `--expected-head SHA --repo-url URL` for a PR.
   - The script fetches remote-tracking refs, defaults to `origin/dev`, verifies the head,
     and prints only a temporary bundle path.
+  - Reuse one bundle for the recorded source/target SHAs across reviewers and follow-ups.
+    Pass validation artifact paths alongside the bundle. When either SHA changes,
+    prepare a new bundle; retain the old one as evidence for the prior review.
   - `prepare` and `preflight` write Git fetch metadata. If the sandbox denies
     `.git/FETCH_HEAD`, retry the same command with repository metadata access.
 - **Collect PR evidence**
@@ -47,6 +50,7 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
     diff text or the full lead history.
   - The reviewer reads Gitea's diff for a PR or `diff.patch` for a branch, every changed
     file at the recorded source SHA (target SHA for deletions), and listed docs.
+    Read referenced docs with `git show SHA:path` or from an export of that SHA.
 
 ## Review
 
@@ -55,6 +59,10 @@ Run from the target repository. Use `gitea` for PR lookup, discussion, submissio
   for every changed file, including tests, config, and migrations, plus candidate findings
   with the code path and consequence. Run a focused reproduction or test when a finding
   needs one; broaden tests only for a concrete remaining risk.
+- **Validation provenance:** Run tests from the pinned source, including local workspace
+  packages in the import path. Use the repository's validation helper when available;
+  check its `--help` before the first call. On a collection failure, inspect the first
+  traceback and package origins before correcting the environment and retrying.
 - **Lead with reviewer:** Check coverage against `files.txt` and the decisive evidence for
   each finding. Send gaps back as targeted follow-ups; avoid repeating the full code trace.
   Own prior-finding reconciliation, the verdict, and publication. Discard unsupported claims.
